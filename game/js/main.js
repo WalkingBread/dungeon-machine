@@ -39,4 +39,3 @@ class DungeonMachine {
         requestAnimationFrame(() => this.run());
     }
 }
-
