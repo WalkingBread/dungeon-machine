@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from logic.character.inventory import Inventory
+from app.logic.character.inventory import Inventory
 
 @dataclass
 class Character:
     name: str
+    description: str
     health: int
     strength: int
     agility: int
@@ -11,6 +12,6 @@ class Character:
     luck: int
     charisma: int
     money: int
-    inventory: Inventory
+    # inventory: Inventory
 
 

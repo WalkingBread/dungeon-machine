@@ -1,4 +1,4 @@
-from logic.character.item import Item
+from app.logic.character.item import Item
 
 class Inventory:
     def __init__(self, size: int):
