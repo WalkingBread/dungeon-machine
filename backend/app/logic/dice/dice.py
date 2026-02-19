@@ -7,14 +7,17 @@ class Dice:
     def roll(self):
         return randint(1, self.sides)
     
-class D6:
+    def normalize_value(self, value: int):
+        return max(1, min(value, self.sides))
+    
+class D6(Dice):
     def __init__(self):
         super().__init__(6)
 
-class D20:
+class D20(Dice):
     def __init__(self):
         super().__init__(20)
 
-class D100:
+class D100(Dice):
     def __init__(self):
         super().__init__(100)
