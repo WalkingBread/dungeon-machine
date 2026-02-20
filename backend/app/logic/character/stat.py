@@ -1,5 +1,8 @@
-from app.logic.dice.dice import Dice
+from app.logic.dice.dice import Dice, D10
+from app.logic.dice.dice_config import get_dice_for, RollType
 from enum import Enum, auto
+
+from typing import Callable
 
 class StatType(Enum):
     STRENGTH = auto(),
@@ -9,9 +12,9 @@ class StatType(Enum):
     CHARISMA = auto()
 
 class Statistic:
-    def __init__(self, value: int, max_value: int):
+    def __init__(self, value: int):
         self._value = value
-        self.max_value = max_value
+        self.max_value = get_dice_for(RollType.STAT).sides
 
     @property
     def value(self):
@@ -46,6 +49,11 @@ class Statistics:
                 super().__setattr__(name, value)
 
     @classmethod
-    def roll_stats(cls, dice: Dice):
-        return cls({s: Statistic(dice.roll(), dice.sides) for s in StatType})
+    def roll_stats(cls, creation_method: Callable[[], Statistic]):
+        return cls({s: creation_method() for s in StatType})
     
+def warhmamer_stat_creation_method() -> Statistic:
+    dice = D10()
+    rolls = [dice.roll() for _ in range(2)]
+    return Statistic(sum(rolls) + 20)
+

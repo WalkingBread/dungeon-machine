@@ -22,6 +22,10 @@ class D8(Dice):
     def __init__(self):
         super().__init__(8)
 
+class D10(Dice):
+    def __init__(self):
+        super().__init__(10)
+
 class D20(Dice):
     def __init__(self):
         super().__init__(20)

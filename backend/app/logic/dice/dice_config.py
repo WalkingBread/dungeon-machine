@@ -20,7 +20,7 @@ class TestRollOutcome(Enum):
         if roll_type not in TEST_ROLL_CONFIG:
             return TestRollOutcome.SUCCESS if is_success else TestRollOutcome.FAILURE
 
-        extreme_roll_conf = TEST_ROLL_CONFIG[roll_type]
+        extreme_roll_conf = TEST_ROLL_CONFIG[roll_type] 
         dice = ROLL_TYPE_DICE_CONFIG[roll_type]
 
         if is_success:
@@ -32,7 +32,7 @@ class TestRollOutcome(Enum):
             if extreme_roll_conf.is_extreme_failure(roll_value, dice.sides):
                 return TestRollOutcome.EXTREME_FAILURE
             return TestRollOutcome.FAILURE
-
+        
 class Percent:
     def __init__(self, value: float):
         self._value = value
@@ -61,18 +61,18 @@ class ExtremeRollConfig:
 
     @classmethod
     def set(cls, extreme_success_percent: float, exteme_failure_percent: float):
-        cls(
+        return cls(
             Percent(extreme_success_percent), 
             Percent(exteme_failure_percent)
         )
+    
+TEST_ROLL_CONFIG = {
+    RollType.STAT: ExtremeRollConfig.set(0.05, 0.05),
+}
 
 ROLL_TYPE_DICE_CONFIG = {
     RollType.STAT: D100(),
     RollType.INITIATIVE: D20()
-}
-
-TEST_ROLL_CONFIG = {
-    RollType.STAT: ExtremeRollConfig.set(0.05, 0.05),
 }
 
 def get_dice_for(roll_type: RollType):
