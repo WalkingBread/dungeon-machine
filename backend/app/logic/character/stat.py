@@ -48,6 +48,10 @@ class Statistics:
             except KeyError:
                 super().__setattr__(name, value)
 
+    def __repr__(self):
+        lines = [f"  {s.name.title():<12} : {inst.value:>3}" for s, inst in self.stats.items()]
+        return "Statistics:\n" + "\n".join(lines)
+
     @classmethod
     def roll_stats(cls, creation_method: Callable[[], Statistic]):
         return cls({s: creation_method() for s in StatType})

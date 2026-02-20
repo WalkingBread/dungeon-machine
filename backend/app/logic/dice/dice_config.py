@@ -1,11 +1,20 @@
 from math import ceil, floor
-from enum import Enum, auto
+from enum import Enum, auto 
 from dataclasses import dataclass
 from app.logic.dice.dice import D100, D20, D8, D6, D4
+from app.logic.utils.value import Percent
 
 class RollType(Enum):
     STAT = auto()
     INITIATIVE = auto()
+
+ROLL_TYPE_DICE_CONFIG = {
+    RollType.STAT: D100(),
+    RollType.INITIATIVE: D20()
+}
+
+def get_dice_for(roll_type: RollType):
+    return ROLL_TYPE_DICE_CONFIG[roll_type]
 
 class TestRollOutcome(Enum):
     EXTREME_SUCCESS = auto()
@@ -33,21 +42,6 @@ class TestRollOutcome(Enum):
                 return TestRollOutcome.EXTREME_FAILURE
             return TestRollOutcome.FAILURE
         
-class Percent:
-    def __init__(self, value: float):
-        self._value = value
-
-    @property
-    def value(self):
-        return self._value
-    
-    @value.setter
-    def value(self, new_value: float):
-        self._value = max(0.0, min(float(new_value), 1.0))
-
-    def __repr__(self):
-        return f"{self._value * 100:.1f}%"
-    
 @dataclass
 class ExtremeRollConfig:
     extreme_success_p: Percent
@@ -69,11 +63,3 @@ class ExtremeRollConfig:
 TEST_ROLL_CONFIG = {
     RollType.STAT: ExtremeRollConfig.set(0.05, 0.05),
 }
-
-ROLL_TYPE_DICE_CONFIG = {
-    RollType.STAT: D100(),
-    RollType.INITIATIVE: D20()
-}
-
-def get_dice_for(roll_type: RollType):
-    return ROLL_TYPE_DICE_CONFIG[roll_type]

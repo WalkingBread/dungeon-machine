@@ -17,5 +17,7 @@ class Inventory:
         
         self._inventory.append(item)
         return True
-
-
+    
+    def remove_item(self, item: Item):
+        if item in self._inventory:
+            self._inventory.remove(item)
