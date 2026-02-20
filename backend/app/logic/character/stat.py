@@ -1,4 +1,4 @@
-from app.logic.dice.dice import D100
+from app.logic.dice.dice import Dice
 from enum import Enum, auto
 
 class StatType(Enum):
@@ -46,6 +46,6 @@ class Statistics:
                 super().__setattr__(name, value)
 
     @classmethod
-    def roll_stats(cls, dice: D100):
+    def roll_stats(cls, dice: Dice):
         return cls({s: Statistic(dice.roll(), dice.sides) for s in StatType})
     

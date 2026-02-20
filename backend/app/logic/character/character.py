@@ -1,11 +1,10 @@
 from app.logic.character.inventory import Inventory
 from app.logic.character.stat import Statistics, StatType
-from app.logic.dice.dice import D100
+from app.logic.dice.dice import Dice
+from app.logic.character.dice_config import RollType, TestRollOutcome, get_dice_for
 
 INVENTORY_SIZE = 10
 MAX_HEALTH = 15
-
-STAT_DICE = D100()
 
 class Character:
     def __init__(self, name: str, stats: Statistics, 
@@ -18,6 +17,18 @@ class Character:
         self.stats = stats
         self.inventory = Inventory(inventory_size)
 
-    def roll_for_stat(stat: StatType, modifier: int = 0):
-        roll = STAT_DICE.roll()
-        return STAT_DICE.normalize_value(roll + modifier)
+    def roll_dice(self, dice: Dice, modifier: int = 0):
+        roll = dice.roll()
+        return dice.normalize_value(roll + modifier)
+
+    def roll_for_stat(self, stat: StatType, modifier: int = 0):
+        dice = get_dice_for(RollType.STAT)
+        roll = self.roll_dice(dice, modifier)
+        return TestRollOutcome.get_outcome(roll, self.stats[stat])
+
+    @classmethod
+    def generate_character(cls, name: str):
+        dice = get_dice_for(RollType.STAT)
+        stats = Statistics.roll_stats(dice)
+        return cls(name, stats)
+
