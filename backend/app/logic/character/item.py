@@ -1,4 +1,4 @@
-from app.logic.dice.dice import Dice
+from app.logic.dice import Dice
 
 class Item:
     def __init__(self):

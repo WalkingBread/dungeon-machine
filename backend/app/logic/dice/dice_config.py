@@ -1,7 +1,7 @@
 from math import ceil, floor
 from enum import Enum, auto 
 from dataclasses import dataclass
-from app.logic.dice.dice import D100, D20, D8, D6, D4
+from app.logic.dice import D100, D20, D10, D8, D6, D4
 from app.logic.utils.value import Percent
 
 class RollType(Enum):
