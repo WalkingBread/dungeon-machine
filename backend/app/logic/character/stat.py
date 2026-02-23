@@ -5,10 +5,12 @@ from enum import Enum, auto
 from typing import Callable
 
 class StatType(Enum):
-    STRENGTH = auto(),
-    AGILITY = auto(),
-    INTELLIGENCE = auto(),
-    LUCK = auto(), 
+    def _generate_next_value_(name, _start, _count, _last_values):
+        return name.upper()
+    STRENGTH = auto()
+    AGILITY = auto()
+    INTELLIGENCE = auto()
+    LUCK = auto()
     CHARISMA = auto()
 
 class Statistic:
