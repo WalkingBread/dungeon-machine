@@ -94,7 +94,7 @@ class TestModelManagerConfiguredImpl:
             print(f"\n--- REACTION OUTPUT ---")
             print(f"ROLLS REQUESTED: {response.rolls}")
 
-            from app.logic.modelmanager.configured.models import RollDecision, StatType
+            from app.logic.modelmanager.configured.models import RollDecision, StatisticType
 
             assert isinstance(response, RollDecision), "Should return a RollDecision instance"
             assert isinstance(response.rolls, list), "Rolls should be a list"
@@ -102,7 +102,7 @@ class TestModelManagerConfiguredImpl:
             if len(response.rolls) > 0:
                 first_roll = response.rolls[0]
                 assert hasattr(first_roll, 'character_name'), "Roll must specify a character"
-                assert isinstance(first_roll.statistic, StatType), "Statistic must be a valid StatType Enum"
+                assert isinstance(first_roll.statistic, StatisticType), "Statistic must be a valid StatType Enum"
                 print(f"Validated Roll: {first_roll.character_name} via {first_roll.statistic}")
 
         except Exception as e:

@@ -40,10 +40,10 @@ class StoryUpdate(BaseModel):
         description="The technical state changes triggered by this story segment.",
     )
 
-class StatType(Enum):
+class StatisticType(Enum):
     def _generate_next_value_(name, _start, _count, _last_values):
         return name.upper()
-    NO_STAT = auto()
+    NO_STATISTIC = auto()
     STRENGTH = auto()
     AGILITY = auto()
     INTELLIGENCE = auto()
@@ -53,7 +53,7 @@ class StatType(Enum):
 class DiceRoll(BaseModel):
     name: str = Field(default="dice_roll")
     character_name: str = Field(..., description="The character to perform the action.")
-    statistic: StatType = Field(
+    statistic: StatisticType = Field(
         ...,
         description="The stat to use. Use NO_STAT for flat rolls with no modifiers."
     )
