@@ -1,5 +1,5 @@
-from app.logic.dice.dice import Dice, D10
-from app.logic.dice.dice_config import get_dice_for, RollType
+from app.logic.dice import D10
+from app.logic.dice import get_dice_for, RollType
 from enum import Enum, auto
 
 from typing import Callable
@@ -53,6 +53,9 @@ class Statistics:
     def __repr__(self):
         lines = [f"  {s.name.title():<12} : {inst.value:>3}" for s, inst in self.stats.items()]
         return "Statistics:\n" + "\n".join(lines)
+    
+    def upgrade_stat(self, stat_type: StatType, value: int = 1):
+        self.stats[stat_type] += value
 
     @classmethod
     def roll_stats(cls, creation_method: Callable[[], Statistic]):

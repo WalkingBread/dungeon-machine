@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from app.logic.character.inventory import Inventory
+from app.logic.character import Inventory
 
 @dataclass
 class Character:
