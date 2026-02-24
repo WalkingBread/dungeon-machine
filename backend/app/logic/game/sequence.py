@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 
-from app.logic.game import Scene
+from app.logic.game.scene import Scene
 from app.logic.game.state import GameState
 
+
 @dataclass
-class Sequence:
+class StorySequence:
     scene: Scene
-    game_state: GameState
     player_action: str

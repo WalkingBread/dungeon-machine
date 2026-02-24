@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from app.logic.character import Character
-from app.logic.player import Player
-from app.logic.game import Game, Scene
+from app.logic.game import Game
+from app.logic.game.player import Player
 
 @dataclass
 class CharacterData:
