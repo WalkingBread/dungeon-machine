@@ -12,6 +12,7 @@ class Character:
     luck: int
     charisma: int
     money: int
+
     # inventory: Inventory
 
 

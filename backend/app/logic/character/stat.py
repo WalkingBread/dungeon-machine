@@ -61,3 +61,6 @@ def warhmamer_stat_creation_method() -> Statistic:
     rolls = [dice.roll() for _ in range(2)]
     return Statistic(sum(rolls) + 20)
 
+def warhammer_stat_bonus(stat: Statistic) -> int:
+    return int(stat.value // 10)
+
