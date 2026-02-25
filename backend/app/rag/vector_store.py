@@ -1,47 +1,56 @@
+from itertools import zip_longest
+from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStore
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_text_splitters.base import TextSplitter
 from qdrant_client.models import Distance, VectorParams
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
-from langchain_core.document_loaders.base import BaseLoader
-from langchain_core.documents import Document
-
 from app.genai.models import get_gpt_embedding
+from app.rag.loaders import LoaderRegistry
+from app.rag.splitters import SplitterRegistry
+from urllib.parse import urlparse
 
-COLLECTION_NAME = "test"
+def qdrant_vector_store(location: str = ":memory:", collection_name: str = "test", embeddings: Embeddings = get_gpt_embedding()):
+    client = QdrantClient(":memory:")
+    vector_size = len(embeddings.embed_query("sample text"))
 
-embeddings = get_gpt_embedding()
+    if not client.collection_exists(collection_name):
+        client.create_collection(
+            collection_name=collection_name,
+            vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
+        )
 
-# In memory for testing purposes
-client = QdrantClient(":memory:")
-vector_size = len(embeddings.embed_query("sample text"))
-
-# Test collection creation
-if not client.collection_exists(COLLECTION_NAME):
-    client.create_collection(
-        collection_name=COLLECTION_NAME,
-        vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
+    return QdrantVectorStore(
+        client=client,
+        collection_name=collection_name,
+        embedding=embeddings,
     )
 
-default_vector_store = QdrantVectorStore(
-    client=client,
-    collection_name=COLLECTION_NAME,
-    embedding=embeddings,
-)
 
-default_recursive_text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=5000,
-    chunk_overlap=500,
-    add_start_index=True,
-)
+class QuerableMemory:
+    def __init__(self, vector_store: VectorStore, loader_registry: LoaderRegistry, splitter_registry: SplitterRegistry) -> None:
+        self.store = vector_store
+        self.loader_registry = loader_registry
+        self.splitter_registry = splitter_registry
 
-def load_and_split(loader: BaseLoader, splitter: TextSplitter = default_recursive_text_splitter) -> list[Document]:
-    docs = loader.load()
-    all_splits = splitter.split_documents(docs)
-    return all_splits
+        self._INGESTION_STRATEGY = {
+            "web": ("web", ["resursive"]),
+            ".pdf": ("pdf", ["markdown", "resursive"]),
+            ".md": ("txt", ["markdown", "resursive"]),
+            ".txt": ("txt", ["recursive"])
+        }       
 
-def store_documents(documents: list[Document], vector_store: VectorStore = default_vector_store) -> list[str]:
-    return vector_store.add_documents(documents)
+    def ingest(self, path: str, loader_type: str, splitter_types: list[str], loader_params={}, splitter_params: list[dict]=[]) -> None:
+        loader = self.loader_registry.get(loader_type, path, **loader_params)
+        documents = loader.load()
+        for stype, params in zip_longest(splitter_types, splitter_params):
+            splitter = self.splitter_registry.get(stype, **(params | {}))
+            documents = splitter.split_documents(documents)
+
+        self.store.add_documents(documents)
+
+    def auto_ingest(self, path: str, loader_params={}, splitter_params={}) -> None:
+        ...
+
+
 
 
