@@ -11,7 +11,6 @@ from logic.game.event import GameEvent
 STORYTELLER_MODEL_DICT_NAME = "storyteller_model"
 REACTION_MODEL_DICT_NAME = "reaction_model"
 
-
 class ModelManagerConfiguredImpl(ModelManager):
     def __init__(self):
         """

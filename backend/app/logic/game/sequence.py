@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from logic.game.scene import Scene
 from logic.game.action import PlayerActionEvents
 
-
 @dataclass
 class StorySequence:
     scene: Scene

@@ -1,6 +1,10 @@
 from logic.game.state import PlayerData
-from logic.game.event import GameEvent
 from dataclasses import dataclass
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from logic.game.event import GameEvent
 
 @dataclass
 class PlayerAction:

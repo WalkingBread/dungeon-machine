@@ -3,23 +3,27 @@ from logic.game.scene import Scene, SceneSchema
 from logic.game.sequence import StorySequence
 from logic.game.player import Player
 from logic.game.action import PlayerAction, PlayerActionEvents
-from logic.modelmanager.configured.model_manager_configured_impl import ModelManagerConfiguredImpl
-from logic.modelmanager.configured.models import StoryUpdate
 from logic.modelmanager.context import GameContext
 from logic.game.state import GameState, PlayerData
 
+from logic.modelmanager import ModelManager
+
 class GameMaster:
-    def __init__(self):
+    def __init__(self, brain: ModelManager):
         self._game: Game = None
         self._history: list[StorySequence] = []
         self.current_scene: Scene = None
         self.player_actions: list[PlayerActionEvents] = []
 
-        self.model_manager = ModelManagerConfiguredImpl()
+        self.brain = brain
 
     @property
     def game(self):
         return self._game
+    
+    @property
+    def last_sequence(self) -> StorySequence:
+        return self._history[-1] if self._history else None
     
     def create_game(self, theme: str, players: list[Player]):
         self._game = Game(theme, players)
@@ -28,10 +32,6 @@ class GameMaster:
         scene_schema = self._fetch_story_introduction()
         self.current_scene = self._game.build_scene(scene_schema)
         return self.current_scene
-
-    @property
-    def last_sequence(self) -> StorySequence:
-        return self._history[-1] if self._history else None
     
     def provide_scene(self) -> Scene:
         self._end_current_scene()
@@ -62,7 +62,7 @@ class GameMaster:
         )
 
     def _fetch_next_scene(self) -> SceneSchema:
-        return self.model_manager.provide_scene_description(
+        return self.brain.provide_scene_description(
             self._get_game_context()
         )
 
@@ -73,4 +73,4 @@ class GameMaster:
         )
 
     def _fetch_player_action_events(self, player_action: PlayerAction) -> PlayerActionEvents:
-        return self.model_manager.provide_character_events(player_action)
+        return self.brain.provide_character_events(player_action)

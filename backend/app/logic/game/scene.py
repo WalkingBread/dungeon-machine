@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 
-from logic.game.event import GameEvent
 from logic.game.state import GameState
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from logic.game.event import GameEvent
 
 @dataclass
 class SceneSchema:

@@ -1,14 +1,18 @@
-from logic.game.player import Player
-from logic.game.event import GameEvent
+from logic.game.character import NPC, Player
 from logic.game.scene import SceneSchema, Scene
 from logic.game.action import PlayerActionEvents
 from logic.game.state import GameState
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from logic.game.event import GameEvent
 
 class Game:
     def __init__(self, theme: str, players: list[Player]):
         self.theme = theme
         self.players = players
-        self.characters = []
+        self.characters: list[NPC] = []
 
     def build_scene(self, scene_schema: SceneSchema) -> Scene:
         return Scene(
@@ -24,6 +28,14 @@ class Game:
         # todo
         # execute events
         return self.capture_game_state()
+    
+    def spawn_character(self, name: str):
+        self.characters.append(
+            NPC.generate_character(name)
+        )
+
+    def remove_character(self, character: NPC):
+        self.characters.remove(character)
     
     def capture_game_state(self) -> GameState:
         return GameState.capture_state(self)
