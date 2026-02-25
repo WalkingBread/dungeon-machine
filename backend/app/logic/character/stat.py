@@ -1,5 +1,5 @@
-from app.logic.dice import D10
-from app.logic.dice import get_dice_for, RollType
+from logic.dice import D10
+from logic.dice import get_dice_for, RollType
 from enum import Enum, auto
 
 from typing import Callable

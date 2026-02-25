@@ -1,11 +1,17 @@
-from app.logic.game.state import PlayerData
-from app.logic.game.event import GameEvent
+from logic.game.state import PlayerData
+from logic.game.event import GameEvent
 from dataclasses import dataclass
 
 @dataclass
 class PlayerAction:
     player: PlayerData
     action: str
+
+    def to_dict(self) -> dict:
+        return {
+            'player': self.player.to_dict(),
+            'action': self.action
+        }
 
 
 @dataclass
@@ -16,5 +22,16 @@ class PlayerActionEvents:
     @property
     def action(self):
         return self.player_action.action
+    
+    @property
+    def player(self):
+        return self.player_action.player
+    
+    def to_dict(self) -> dict:
+        return {
+            'player': self.player.to_dict(),
+            'action': self.action,
+            'events': [e.to_dict() for e in self.events]
+        }
     
     

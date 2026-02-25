@@ -1,5 +1,5 @@
-from app.logic.character import Character
-from app.logic.character.stat import Statistics, StatType
+from logic.character import Character
+from logic.character.stat import Statistics, StatType
 
 MAX_HEALTH = 15
 INVENTORY_SIZE = 10

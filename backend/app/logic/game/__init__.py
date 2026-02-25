@@ -1,7 +1,6 @@
-from app.logic.game.game import Game
-from app.logic.game.game_master import GameMaster
+from logic.game.game import Game
+from logic.game.game_master import GameMaster
 
 __all__ = [
-    'Game', 
-    'GameMaster',
+    'Game'
 ]

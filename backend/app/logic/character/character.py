@@ -1,7 +1,7 @@
-from app.logic.character import Inventory
-from app.logic.character.item import Item
-from app.logic.character.stat import Statistics, StatType, warhmamer_stat_creation_method
-from app.logic.dice import Dice, RollType, TestRollOutcome, get_dice_for
+from logic.character.inventory import Inventory
+from logic.character.item import Item
+from logic.character.stat import Statistics, StatType, warhmamer_stat_creation_method
+from logic.dice import Dice, RollType, TestRollOutcome, get_dice_for
 
 INVENTORY_SIZE = 10
 MAX_HEALTH = 15
