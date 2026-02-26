@@ -1,7 +1,4 @@
-from logic.brain.contextparser.context_parser_impl import ContextParserImpl
-from logic.brain.gm_brain_impl import GameMasterBrainImpl
-from logic.brain.modelmanager.configured.model_manager_configured_impl import ModelManagerConfiguredImpl
-from logic.brain.responseparser.response_parser_impl import ResponseParserImpl
+from logic.brain.game_master_brain import GameMasterBrain
 from logic.game.characters import PlayerManagedCharacter
 from logic.game.game import Game
 from logic.game.scene import Scene, UserInputSequence
@@ -12,7 +9,7 @@ class GameMaster:
         self._game: Game = None
         self._history: list[Scene] = []
         self.current_scene: Scene = None
-        self.brain = GameMasterBrainImpl(ContextParserImpl(), ModelManagerConfiguredImpl(), ResponseParserImpl())
+        self.brain = GameMasterBrain()
 
     @property
     def game(self):
