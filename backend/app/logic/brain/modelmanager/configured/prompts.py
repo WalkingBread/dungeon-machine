@@ -9,7 +9,7 @@ def get_storyteller_prompt() -> ChatPromptTemplate:
         "2. AddCharacter: Use this when a new named entity enters the scene.\n"
         "3. ChangeHealth: Use negative values for damage and positive for healing.\n"
         "4. DeleteCharacter: Use this only when a character dies or permanently leaves.\n\n"
-        "5. Text length: For a scene description try to generate between 300 and 500 words.\n\n"
+        "5. Text length: For a scene description try to generate between 100 and 200 words.\n\n"
         "6. Questions: Don't add explicit questions to the player.\n\n"
         "7. Event Type: Don't forget to add event_type literal to each of the event objects.\n\n"
     )
