@@ -1,44 +1,38 @@
 from dataclasses import dataclass, field
-from abc import ABC, abstractmethod
+from abc import ABC
 
 @dataclass
 class SceneSequence(ABC):
     content: str
 
-    @abstractmethod
-    def get_type(self) -> str:
-        """Return the type of the sequence."""
-        pass
+    @property
+    def sequence_type(self) -> str:
+        return self.__class__.__name__.removesuffix("Sequence")
 
     def format_sequence(self) -> str:
         """Returns the labeled version: <type>: <content>"""
-        return f"{self.get_type()}: {self.content}"
+        return f"{self.sequence_type}: {self.content}"
 
 
 @dataclass
 class GameIntroductionSequence(SceneSequence):
-    def get_type(self) -> str:
-        return "GameIntroduction"
+    pass
 
 @dataclass
-class UserInputSequence(SceneSequence):
-    def get_type(self) -> str:
-        return "UserInput"
+class UserInputSequence(SceneSequence): # will add additional fields like player_id later on
+    pass
 
 @dataclass
 class SceneDescriptionSequence(SceneSequence):
-    def get_type(self) -> str:
-        return "SceneDescription"
+    pass
 
 @dataclass
 class ActionDescriptionSequence(SceneSequence):
-    def get_type(self) -> str:
-        return "ActionDescription"
+    pass
 
 @dataclass
 class EngineEventSequence(SceneSequence):
-    def get_type(self) -> str:
-        return "EngineEvent"
+    pass
 
 @dataclass
 class Scene:
