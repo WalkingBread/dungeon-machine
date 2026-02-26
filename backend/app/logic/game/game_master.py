@@ -1,7 +1,7 @@
 from logic.brain.game_master_brain import GameMasterBrain
 from logic.game.characters import PlayerManagedCharacter
 from logic.game.game import Game
-from logic.game.scene import Scene, UserInputSequence
+from logic.game.scene import Scene, PlayerInputSequence
 
 
 class GameMaster:
@@ -31,25 +31,29 @@ class GameMaster:
         for seq in engine_event_sequences: self.current_scene.add(seq)
         return self.current_scene
 
-    def _begin_new_scene(self) -> Scene:
+    def _begin_new_scene(self):
         """
         helper function for start_next_scene
         """
         self._history.append(self.current_scene)
         self.current_scene = Scene()
 
-    def provide_action_reaction(self) -> Scene:
+    def handle_player_action(self, player: PlayerManagedCharacter, player_input: str) -> Scene:
+        self.current_scene.add(
+            PlayerInputSequence(
+                player_id=player.character_id,
+                player_name=player.name,
+                content=player_input))
+        self._process_player_action()
+        return self.current_scene
+
+    def _process_player_action(self):
+        """
+        a helper function for add_user_input, which processes the input,
+        consults brain to describe and get events and calls engine to execute logic
+        """
         action_outcome_description, events = (
             self.brain.provide_player_action_outcome(self._history + [self.current_scene], self._game.capture_game_state()))
         self.current_scene.add(action_outcome_description)
         engine_event_sequences = self._game.execute_events(events)
         for seq in engine_event_sequences: self.current_scene.add(seq)
-        return self.current_scene
-
-    def add_user_input(self, user_input: str) -> Scene:
-        self.current_scene.add(UserInputSequence(user_input))
-        return self.current_scene
-
-    def _end_current_scene(self):
-        self._history.append(self.current_scene)
-        self.current_scene = None

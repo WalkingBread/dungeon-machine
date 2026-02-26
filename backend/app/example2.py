@@ -10,10 +10,9 @@ gm.introduce_story()
 # init done
 
 gm.start_next_scene()
-gm.add_user_input("I am shouting like crazy to rise the attention of the nearby people!")
-gm.provide_action_reaction()
+gm.handle_player_action(players[0], "I am shouting like crazy to rise the attention of the nearby people!")
 
 for scene in gm._history + [gm.current_scene]:
     print(scene.get_scene_content())
 
-print("hello")
+print("i use this as debugging breakpoint :)")
