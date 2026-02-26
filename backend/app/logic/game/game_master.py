@@ -1,76 +1,52 @@
+from logic.brain.contextparser.context_parser_impl import ContextParserImpl
+from logic.brain.gm_brain_impl import GameMasterBrainImpl
+from logic.brain.modelmanager.configured.model_manager_configured_impl import ModelManagerConfiguredImpl
+from logic.brain.responseparser.response_parser_impl import ResponseParserImpl
+from logic.game.characters import PlayerManagedCharacter
 from logic.game.game import Game
-from logic.game.scene import Scene, SceneSchema
-from logic.game.sequence import StorySequence
-from logic.game.player import Player
-from logic.game.action import PlayerAction, PlayerActionEvents
-from logic.modelmanager.configured.model_manager_configured_impl import ModelManagerConfiguredImpl
-from logic.modelmanager.configured.models import StoryUpdate
-from logic.modelmanager.context import GameContext
-from logic.game.state import GameState, PlayerData
+from logic.game.scene import Scene, UserInputSequence
+
 
 class GameMaster:
     def __init__(self):
         self._game: Game = None
-        self._history: list[StorySequence] = []
+        self._history: list[Scene] = []
         self.current_scene: Scene = None
-        self.player_actions: list[PlayerActionEvents] = []
-
-        self.model_manager = ModelManagerConfiguredImpl()
+        self.brain = GameMasterBrainImpl(ContextParserImpl(), ModelManagerConfiguredImpl(), ResponseParserImpl())
 
     @property
     def game(self):
         return self._game
-    
-    def create_game(self, theme: str, players: list[Player]):
+
+    def create_game(self, theme: str, players: list[PlayerManagedCharacter]):
         self._game = Game(theme, players)
 
-    def introduce_story(self) -> Scene:
-        scene_schema = self._fetch_story_introduction()
-        self.current_scene = self._game.build_scene(scene_schema)
-        return self.current_scene
+    def introduce_story(self):
+        self.current_scene = Scene()
+        self.current_scene.add(self.brain.get_game_introduction())
 
-    @property
-    def last_sequence(self) -> StorySequence:
-        return self._history[-1] if self._history else None
-    
-    def provide_scene(self) -> Scene:
+    def provide_new_scene(self) -> Scene:
         self._end_current_scene()
-        scene_schema = self._fetch_next_scene()
-        self.current_scene = self.game.build_scene(scene_schema)
+        scene_description_sequence, events = (
+            self.brain.provide_scene_setting(self._history, self._game.capture_game_state()))
+        self.current_scene = Scene()
+        self.current_scene.add(scene_description_sequence)
+        engine_event_sequences = self._game.execute_events(events)
+        for seq in engine_event_sequences: self.current_scene.add(seq)
         return self.current_scene
-    
+
+    def provide_action_reaction(self) -> Scene:
+        action_reaction_description, events = (
+            self.brain.provide_action_reaction([self.current_scene], self._game.capture_game_state()))
+        self.current_scene.add(action_reaction_description)
+        engine_event_sequences = self._game.execute_events(events)
+        for seq in engine_event_sequences: self.current_scene.add(seq)
+        return self.current_scene
+
+    def add_user_input(self, user_input: str) -> Scene:
+        self.current_scene.add(UserInputSequence(user_input))
+        return self.current_scene
+
     def _end_current_scene(self):
-        self._history.append(StorySequence(
-            self.current_scene,
-            self.player_actions
-        ))
+        self._history.append(self.current_scene)
         self.current_scene = None
-        self.player_actions = []
-    
-    def execute_player_action(self, player: Player, action: str) -> GameState:
-        player_action = PlayerAction(
-            PlayerData.from_player(player), 
-            action
-        )
-        action_events = self._fetch_player_action_events(player_action)
-        return self.game.execute_player_action_events(action_events)
-        
-    def _get_game_context(self) -> GameContext:
-        return GameContext(
-            self.game.capture_game_state(),
-            self.last_sequence
-        )
-
-    def _fetch_next_scene(self) -> SceneSchema:
-        return self.model_manager.provide_scene_description(
-            self._get_game_context()
-        )
-
-    def _fetch_story_introduction(self) -> SceneSchema:
-        return SceneSchema(
-            "The village of Oakhaven was promised to be a respite from the mud and blood of the High Road. But as the sun dips below the jagged peaks of the Spine, the long shadows seem to pull at your heels. The air here is too quiet—no crickets chirp, and the locals bar their doors before the light is even gone. You each find yourselves in The Crow’s Nest tavern, not because of the cheap ale, but because it’s the only hearth still burning. As a heavy, rhythmic thudding begins beneath the floorboards, you realize that whatever is haunting this town isn't coming from the woods. It’s already inside'",
-            []
-        )
-
-    def _fetch_player_action_events(self, player_action: PlayerAction) -> PlayerActionEvents:
-        return self.model_manager.provide_character_events(player_action)

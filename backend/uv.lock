@@ -42,6 +42,7 @@ dependencies = [
     { name = "langchain" },
     { name = "langchain-core" },
     { name = "langchain-openai" },
+    { name = "pydantic" },
 ]
 
 [package.dev-dependencies]
@@ -58,6 +59,7 @@ requires-dist = [
     { name = "langchain", specifier = ">=1.2.10" },
     { name = "langchain-core", specifier = ">=1.2.13" },
     { name = "langchain-openai", specifier = ">=1.1.10" },
+    { name = "pydantic", specifier = ">=2.12.5" },
 ]
 
 [package.metadata.requires-dev]

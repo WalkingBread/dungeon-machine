@@ -1,25 +1,58 @@
-from dataclasses import dataclass
-
-from logic.game.event import GameEvent
-from logic.game.state import GameState
+from dataclasses import dataclass, field
+from abc import ABC, abstractmethod
 
 @dataclass
-class SceneSchema:
-    narrative: str
-    events: list[GameEvent]
+class SceneSequence(ABC):
+    content: str
+
+    @abstractmethod
+    def get_type(self) -> str:
+        """Return the type of the sequence."""
+        pass
+
+    def __repr__(self) -> str:
+        return f"{self.get_type()}: {self.content}"
+
+
+@dataclass
+class GameIntroductionSequence(SceneSequence):
+    def get_type(self) -> str:
+        return "GameIntroduction"
+
+@dataclass
+class UserInputSequence(SceneSequence):
+    def get_type(self) -> str:
+        return "UserInput"
+
+@dataclass
+class SceneDescriptionSequence(SceneSequence):
+    def get_type(self) -> str:
+        return "SceneDescription"
+
+@dataclass
+class ActionDescriptionSequence(SceneSequence):
+    def get_type(self) -> str:
+        return "ActionDescription"
+
+@dataclass
+class EngineEventSequence(SceneSequence):
+    def get_type(self) -> str:
+        return "EngineEvent"
+
+def format_sequence(instance: SceneSequence) -> str:
+    """Returns the labeled version: <type>: <content>"""
+    return f"{instance.get_type()}: {instance.content}"
 
 @dataclass
 class Scene:
-    schema: SceneSchema
-    game_state: GameState
+    scene_sequences: list[SceneSequence] = field(default_factory=list)
 
-    @property
-    def narrative(self) -> str:
-        return self.schema.narrative
-    
-    def to_dict(self):
-        return {
-            'narrative': self.narrative,
-            'events_invoked_at_scene': [e.to_dict() for e in self.schema.events],
-            'game_state_after_events': self.game_state.to_dict()
-        }
+    def add(self, sequence: SceneSequence):
+        self.scene_sequences.append(sequence)
+
+    def get_scene_content(self) -> str:
+        """Joins all sequences into a single formatted string."""
+        return "\n".join(str(seq) for seq in self.scene_sequences)
+
+    def __iter__(self):
+        return iter(self.scene_sequences)

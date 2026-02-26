@@ -58,8 +58,12 @@ class DiceRoll(BaseModel):
         description="The stat to use. Use NO_STAT for flat rolls with no modifiers."
     )
 
-class RollDecision(BaseModel):
+class ActionReaction(BaseModel):
+    description: str = Field(
+        ...,
+        description="A very short summary of the triggering event(s) (e.g., 'The guard notices you' or 'A heavy stone door slides shut')."
+    )
     rolls: list[DiceRoll] = Field(
         default_factory=list,
-        description="List of required dice rolls. Empty if no action is required."
+        description="The physical tests required to respond to this event."
     )

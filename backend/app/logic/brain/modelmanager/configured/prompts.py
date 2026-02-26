@@ -19,7 +19,8 @@ def get_storyteller_prompt() -> ChatPromptTemplate:
 
 def get_reaction_prompt() -> ChatPromptTemplate:
     system_message = (
-        "You are the Game Referee. Analyze the narrative context to determine if any "
+        "You are the Game Referee. Describe the results of the action initiated by the user, then "
+        "Analyze the narrative context to determine if any "
         "character actions require a dice roll.\n\n"
         "STAT MAPPING RULES:\n"
         "- STRENGTH: Physical force, athletics.\n"
@@ -28,8 +29,6 @@ def get_reaction_prompt() -> ChatPromptTemplate:
         "- LUCK: Pure probability or external fate.\n"
         "- CHARISMA: Social influence, willpower.\n"
         "- NO_STAT: Use this for basic checks of chance where character skill is irrelevant.\n\n"
-        "Output ONLY the tool call. If the action is guaranteed to succeed or is purely "
-        "flavor text, return an empty list of rolls."
     )
 
     prompt = ChatPromptTemplate.from_messages([
