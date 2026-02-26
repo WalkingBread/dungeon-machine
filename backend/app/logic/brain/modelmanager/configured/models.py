@@ -3,7 +3,7 @@ from typing import Union, Literal, Annotated
 from enum import Enum, auto
 
 class AddCharacter(BaseModel):
-    name: Literal["add_character"] = Field(
+    event_type: Literal["add_character"] = Field(
         default="add_character",
         description="Creates a new character entry."
     )
@@ -11,7 +11,7 @@ class AddCharacter(BaseModel):
     health_amount: int = Field(..., gt=0, description="The initial value of character's health.")
 
 class ChangeHealth(BaseModel):
-    name: Literal["change_health"] = Field(
+    event_type: Literal["change_health"] = Field(
         default="change_health",
         description="Adjusts health of an existing character."
     )
@@ -19,7 +19,7 @@ class ChangeHealth(BaseModel):
     health_amount: int = Field(..., description="The change to the character's health that should be done, negative values means decrement.")
 
 class DeleteCharacter(BaseModel):
-    name: Literal["delete_character"] = Field(
+    event_type: Literal["delete_character"] = Field(
         default="delete_character",
         description="Removes a character from the state."
     )
@@ -27,7 +27,7 @@ class DeleteCharacter(BaseModel):
 
 GameEvent = Annotated[
     Union[AddCharacter, ChangeHealth, DeleteCharacter],
-    Field(discriminator="name")
+    Field(discriminator="event_type")
 ]
 
 class StoryUpdate(BaseModel):

@@ -10,7 +10,8 @@ class SceneSequence(ABC):
         """Return the type of the sequence."""
         pass
 
-    def __repr__(self) -> str:
+    def format_sequence(self) -> str:
+        """Returns the labeled version: <type>: <content>"""
         return f"{self.get_type()}: {self.content}"
 
 
@@ -39,10 +40,6 @@ class EngineEventSequence(SceneSequence):
     def get_type(self) -> str:
         return "EngineEvent"
 
-def format_sequence(instance: SceneSequence) -> str:
-    """Returns the labeled version: <type>: <content>"""
-    return f"{instance.get_type()}: {instance.content}"
-
 @dataclass
 class Scene:
     scene_sequences: list[SceneSequence] = field(default_factory=list)
@@ -52,7 +49,7 @@ class Scene:
 
     def get_scene_content(self) -> str:
         """Joins all sequences into a single formatted string."""
-        return "\n".join(str(seq) for seq in self.scene_sequences)
+        return "\n".join(seq.format_sequence() for seq in self.scene_sequences)
 
     def __iter__(self):
         return iter(self.scene_sequences)
