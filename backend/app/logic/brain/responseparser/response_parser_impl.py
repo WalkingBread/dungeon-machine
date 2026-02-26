@@ -1,10 +1,9 @@
-from logic.brain.modelmanager.configured.models import StoryUpdate, ActionReaction
-from logic.brain.responseparser.response_parser import ResponseParser
+from logic.brain.modelmanager.request_structures import StoryUpdate, ActionReaction
 from logic.game.game_event import GameEvent
 from logic.game.scene import SceneDescriptionSequence, ActionDescriptionSequence
 
 
-class ResponseParserImpl(ResponseParser):
+class ResponseParser:
 
     def parse_to_scene_setting(self, story_update: StoryUpdate) -> tuple[SceneDescriptionSequence, list[GameEvent]]:
         sequence = SceneDescriptionSequence(

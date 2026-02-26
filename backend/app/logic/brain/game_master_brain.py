@@ -1,6 +1,6 @@
 from logic.brain.contextparser.context_parser_impl import ContextParserImpl
-from logic.brain.modelmanager.configured.model_manager_configured_impl import ModelManagerConfiguredImpl
-from logic.brain.responseparser.response_parser_impl import ResponseParserImpl
+from logic.brain.modelmanager.model_manager import ModelManager
+from logic.brain.responseparser.response_parser_impl import ResponseParser
 from logic.game.game import GameState
 from logic.game.game_event import GameEvent
 from logic.game.scene import SceneDescriptionSequence, ActionDescriptionSequence, Scene, GameIntroductionSequence
@@ -9,8 +9,8 @@ from logic.game.scene import SceneDescriptionSequence, ActionDescriptionSequence
 class GameMasterBrain:
     def __init__(self):
         self._context_parser = ContextParserImpl()
-        self._model_manager = ModelManagerConfiguredImpl()
-        self._response_parser = ResponseParserImpl()
+        self._model_manager = ModelManager()
+        self._response_parser = ResponseParser()
 
     def get_game_introduction(self, theme: str = None) -> GameIntroductionSequence:
         """
