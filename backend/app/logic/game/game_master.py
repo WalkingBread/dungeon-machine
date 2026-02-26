@@ -22,19 +22,25 @@ class GameMaster:
         self.current_scene = Scene()
         self.current_scene.add(self.brain.get_game_introduction())
 
-    def provide_new_scene(self) -> Scene:
-        self._end_current_scene()
+    def start_next_scene(self) -> Scene:
         scene_description_sequence, events = (
-            self.brain.provide_scene_setting(self._history, self._game.capture_game_state()))
-        self.current_scene = Scene()
+            self.brain.provide_scene_setting(self._history + [self.current_scene], self._game.capture_game_state()))
+        self._begin_new_scene()
         self.current_scene.add(scene_description_sequence)
         engine_event_sequences = self._game.execute_events(events)
         for seq in engine_event_sequences: self.current_scene.add(seq)
         return self.current_scene
 
+    def _begin_new_scene(self) -> Scene:
+        """
+        helper function for start_next_scene
+        """
+        self._history.append(self.current_scene)
+        self.current_scene = Scene()
+
     def provide_action_reaction(self) -> Scene:
         action_reaction_description, events = (
-            self.brain.provide_action_reaction([self.current_scene], self._game.capture_game_state()))
+            self.brain.provide_action_reaction(self._history + [self.current_scene], self._game.capture_game_state()))
         self.current_scene.add(action_reaction_description)
         engine_event_sequences = self._game.execute_events(events)
         for seq in engine_event_sequences: self.current_scene.add(seq)

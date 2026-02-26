@@ -9,7 +9,7 @@ gm.introduce_story()
 
 # init done
 
-gm.provide_new_scene()
+gm.start_next_scene()
 gm.add_user_input("I am shouting like crazy to rise the attention of the nearby people!")
 gm.provide_action_reaction()
 
