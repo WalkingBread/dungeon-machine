@@ -26,9 +26,9 @@ class GameMasterBrain:
         story_update = self._model_manager.provide_scene_setting(context)
         return self._response_parser.parse_to_scene_setting(story_update)
 
-    def provide_action_reaction(self, history: list[Scene], game_state: GameState) \
+    def provide_player_action_outcome(self, history: list[Scene], game_state: GameState) \
             -> tuple[ActionDescriptionSequence, list[GameEvent]]:
 
-        context = self._context_parser.parse_to_action_reaction_context(history, game_state)
-        action_reaction = self._model_manager.provide_action_reaction(context)
-        return self._response_parser.parse_to_action_reaction(action_reaction)
+        context = self._context_parser.parse_to_player_action_outcome_context(history, game_state)
+        action_outcome = self._model_manager.provide_player_action_outcome(context)
+        return self._response_parser.parse_to_player_action_outcome(action_outcome)

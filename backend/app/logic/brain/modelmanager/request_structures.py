@@ -33,7 +33,7 @@ GameEvent = Annotated[
 class StoryUpdate(BaseModel):
     new_story_segment: str = Field(
         ...,
-        description="The next part of the narrative based on the user's input."
+        description="The next part of the narrative based on the previous story segment."
     )
     engine_events: list[GameEvent] = Field(
         default_factory=list,
@@ -58,7 +58,7 @@ class DiceRoll(BaseModel):
         description="The stat to use. Use NO_STAT for flat rolls with no modifiers."
     )
 
-class ActionReaction(BaseModel):
+class PlayerActionOutcome(BaseModel):
     description: str = Field(
         ...,
         description="A very short summary of the triggering event(s) (e.g., 'The guard notices you' or 'A heavy stone door slides shut')."

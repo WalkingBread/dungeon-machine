@@ -39,9 +39,9 @@ class GameMaster:
         self.current_scene = Scene()
 
     def provide_action_reaction(self) -> Scene:
-        action_reaction_description, events = (
-            self.brain.provide_action_reaction(self._history + [self.current_scene], self._game.capture_game_state()))
-        self.current_scene.add(action_reaction_description)
+        action_outcome_description, events = (
+            self.brain.provide_player_action_outcome(self._history + [self.current_scene], self._game.capture_game_state()))
+        self.current_scene.add(action_outcome_description)
         engine_event_sequences = self._game.execute_events(events)
         for seq in engine_event_sequences: self.current_scene.add(seq)
         return self.current_scene

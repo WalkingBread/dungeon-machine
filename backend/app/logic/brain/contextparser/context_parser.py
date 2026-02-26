@@ -10,5 +10,5 @@ class ContextParser(ABC):
         pass
 
     @abstractmethod
-    def parse_to_action_reaction_context(self, history: list[Scene], game_state: GameState) -> dict:
+    def parse_to_player_action_outcome_context(self, history: list[Scene], game_state: GameState) -> dict:
         pass

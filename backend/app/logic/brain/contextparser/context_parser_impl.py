@@ -19,7 +19,7 @@ class ContextParserImpl(ContextParser):
             "previous_scene_content": current_scene.get_scene_content(),
         }
 
-    def parse_to_action_reaction_context(self, history: list[Scene], game_state: GameState) -> dict:
+    def parse_to_player_action_outcome_context(self, history: list[Scene], game_state: GameState) -> dict:
         """
         Prepares data specifically for the LLM to decide on dice rolls and
         consequences based on the player's last move.
