@@ -1,4 +1,4 @@
-from logic.game.characters import PlayerManagedCharacter, GameManagedCharacter
+from logic.game.character import PlayerCharacter, GameCharacter
 from logic.game.game_event import GameEvent
 from dataclasses import dataclass
 
@@ -6,7 +6,7 @@ from logic.game.scene import EngineEventSequence
 
 
 class Game:
-    def __init__(self, theme: str, players: list[PlayerManagedCharacter]):
+    def __init__(self, theme: str, players: list[PlayerCharacter]):
         self.theme = theme
         self.players = players
         self.characters = []
@@ -23,5 +23,5 @@ class Game:
 @dataclass(frozen=True)
 class GameState:
     theme: str
-    players: list[PlayerManagedCharacter]
-    characters: list[GameManagedCharacter]
+    players: list[PlayerCharacter]
+    characters: list[GameCharacter]
