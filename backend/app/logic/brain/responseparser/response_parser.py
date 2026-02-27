@@ -9,10 +9,7 @@ class ResponseParser:
             -> tuple[SceneDescriptionSequence, list[GameEvent]]:
 
         sequence = SceneDescriptionSequence(content=story_update.new_story_segment)
-
-        events = []
-        for event in story_update.engine_events:
-            events.append(GameEvent(event_str=str(event)))
+        events = self._map_to_game_events(story_update.engine_events)
 
         return sequence, events
 
@@ -20,9 +17,13 @@ class ResponseParser:
             -> tuple[ActionDescriptionSequence, list[GameEvent]]:
 
         sequence = ActionDescriptionSequence(content=action_outcome.description)
-
-        events = []
-        for roll in action_outcome.rolls:
-            events.append(GameEvent(event_str=str(roll)))
+        events = self._map_to_game_events(action_outcome.rolls)
 
         return sequence, events
+
+    def _map_to_game_events(self, llm_events) -> list[GameEvent]:
+        game_events = []
+        for llm_event in llm_events:
+            game_events.append(GameEvent(event_str=str(llm_event)))
+
+        return game_events
