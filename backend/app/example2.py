@@ -1,7 +1,7 @@
-from logic.game.character import PlayerCharacter
+from logic.character import Character
 from logic.game.game_master import GameMaster
 
-players = [PlayerCharacter(0, "Marek", "A strong warrior standing tall", 80)]
+players = [Character.generate_character('Adam')]
 
 gm = GameMaster()
 gm.create_game("", players)

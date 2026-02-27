@@ -47,9 +47,9 @@ class GameMaster:
     def handle_player_action(self, player: PlayerCharacter, player_input: str) -> Scene:
         self.current_scene.add(
             PlayerInputSequence(
-                player_id=player.character_id,
                 player_name=player.name,
-                content=player_input))
+                content=player_input
+        ))
         self._process_player_action()
         return self.current_scene
 

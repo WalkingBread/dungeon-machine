@@ -19,8 +19,7 @@ class GameIntroductionSequence(SceneSequence):
     pass
 
 @dataclass
-class PlayerInputSequence(SceneSequence): # will add additional fields like player_id later on
-    player_id: int
+class PlayerInputSequence(SceneSequence):
     player_name:str
 
     def format_sequence(self) -> str:
