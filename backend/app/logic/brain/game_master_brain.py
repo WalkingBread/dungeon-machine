@@ -1,6 +1,6 @@
 from logic.brain.contextparser.context_parser_impl import ContextParserImpl
 from logic.brain.modelmanager.model_manager import ModelManager
-from logic.brain.responseparser.response_parser_impl import ResponseParser
+from logic.brain.responseparser.response_parser import ResponseParser
 from logic.game.game import GameState
 from logic.game.game_event import GameEvent
 from logic.game.scene import SceneDescriptionSequence, ActionDescriptionSequence, Scene, GameIntroductionSequence
