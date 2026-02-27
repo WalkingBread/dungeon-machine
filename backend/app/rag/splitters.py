@@ -25,7 +25,8 @@ def default_markdown_text_splitter(**kwargs) -> MarkdownTextSplitter:
 
 class SplitterRegistry:
     _REGISTRY = {
-        "resursive": default_recursive_text_splitter,
+        "recursive": default_recursive_text_splitter,
+        "markdown": default_markdown_text_splitter,
     }
 
     def get(self, type: str, **kwargs) -> TextSplitter:
