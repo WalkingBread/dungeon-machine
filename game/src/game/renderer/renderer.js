@@ -23,4 +23,12 @@ export class Renderer {
         this.ctx.fillStyle = BLACK;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
+
+    getWindowWidth() {
+        return this.canvas.width;
+    }
+
+    getWindowHeight() {
+        return this.canvas.height;
+    }
 }

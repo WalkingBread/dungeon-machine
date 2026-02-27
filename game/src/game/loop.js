@@ -12,10 +12,12 @@ export class GameLoop {
 
     setFrame(frame) {
         this.frame = frame;
+        return this
     }
 
     setTick(tick) {
         this.tick = tick;
+        return this
     }
 
     run() {
