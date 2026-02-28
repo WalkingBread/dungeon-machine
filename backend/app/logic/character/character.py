@@ -47,7 +47,7 @@ class Character:
         self.inventory.remove_item(item)
 
     def add_status(self, status: Status):
-            if not status.stackble:
+            if not status.stackable:
                 self.statuses.discard(status)
             self.statuses.add(status)
             if status.on_apply:
@@ -66,13 +66,15 @@ class Character:
                 status.on_remove(self)
 
 
-    @classmethod
-    def generate_character(cls, name: str):
-        stats = Statistics.roll_stats(warhmamer_stat_creation_method)
-        return cls(name, stats)
+
     
 
 class WarhammerCharacter(Character):
     def __init__(self, name: str, stats: Statistics, inventory_size: int = INVENTORY_SIZE, max_health: int = MAX_HEALTH):
         super().__init__(name, stats, inventory_size, max_health)
         self.inventory = WarhammerInventory(INVENTORY_SIZE, INVENTORY_WEIGHT_LIMIT)
+
+    @classmethod
+    def generate_character(cls, name: str):
+        stats = Statistics.roll_stats(warhmamer_stat_creation_method)
+        return cls(name, stats)
