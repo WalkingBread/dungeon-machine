@@ -1,19 +1,21 @@
 import { GameLoop } from './loop.js'
+import { Renderer } from './renderer/renderer.js';
 import { MenuState } from './state.js'
+import { UiManager } from './ui/manager.js';
 
 const FPS = 30;
 const TPS = 30;
 
 export class Game {
-    constructor(renderer, uiManager, keyboardHandler, mouseHandler, loop_config = {'fps': FPS, 'tps': TPS}) {
-        this.renderer = renderer
-        this.uiManager = uiManager;
+    constructor(canvas, ui, keyboardHandler, mouseHandler, loop_config = {'fps': FPS, 'tps': TPS}) {
+        this.renderer = new Renderer(canvas);
+        this.uiManager = new UiManager(ui);
         this.mouseHandler = mouseHandler;
         this.keyboardHandler = keyboardHandler;
-        this.loop = this.#setupLoop(loop_config)
+        this.loop = this.#setupLoop(loop_config);
         this.state = null;
-        
-        this.#setState(new MenuState(uiManager));
+
+        this.#setState(new MenuState(this.renderer, this.uiManager));
     }
 
     #setupLoop(loop_config) {
@@ -22,7 +24,7 @@ export class Game {
             loop_config['tps']
         )
         .setFrame(() => this.#render())
-        .setTick(() => this.#update())
+        .setTick(() => this.#update());
     }
 
     #setState(state) {
@@ -34,15 +36,15 @@ export class Game {
     }
 
     #render() {
-        this.renderer.clearScreen()
-        this.state.render()
+        this.renderer.clearScreen();
+        this.state.render();
     }
 
     #update() {
-        this.state.update()
+        this.state.update();
     }
 
     run() {
-        this.loop.run()
+        this.loop.run();
     }
 }

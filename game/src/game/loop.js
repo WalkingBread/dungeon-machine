@@ -25,7 +25,7 @@ export class GameLoop {
 
         while (currentTime - this.lastTickTime >= this.frameInterval) {
             this.tick();
-            this.lastTickTime += currentTime;
+            this.lastTickTime = currentTime;
         }
         if (currentTime - this.lastFrameTime >= this.tickInterval) {
             this.frame();

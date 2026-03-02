@@ -1,31 +1,52 @@
-import { Renderer } from "./game/renderer/renderer.js";
 import { Game } from "./game/game.js";
 import { KeyboardHandler, MouseHandler } from "./game/event/eventhandler.js";
-import { UiManager } from "./game/ui/manager.js";
 
 const CANVAS_ID  = 'dm-canvas';
-const UI_LAYER_ID = 'ui-layer'
+const UI_LAYER_ID = 'ui-layer';
+const GAME_CONTAINER_ID = 'dm-container';
 
 window.onload = () => {
-    const canvas = document.getElementById(CANVAS_ID);
-    const ui = document.getElementById(UI_LAYER_ID);
-    new DungeonMachine(canvas, ui).run();
+    const gameContainer = document.getElementById(GAME_CONTAINER_ID);
+    new DungeonMachine(gameContainer).run();
 }
 
+const DESIGN_WIDTH = 1920;
+const DESIGN_HEIGHT = 1080;
+
 class DungeonMachine {
-    constructor(canvas, ui) {
-        this.renderer = new Renderer(canvas);
-        this.uiManager = new UiManager(ui); 
+    constructor(gameContainer) {
+        this.gameContainer = gameContainer;
+
+        const canvas = this.#setupCanvas();
+        const ui = this.#setupUI();
+        
+        this.resizeWindow();
+
         this.game = new Game(
-            this.renderer,
-            this.uiManager,
+            canvas,
+            ui,
             this.#setupKeyboardHandler(),
             this.#setupMouseHandler()
         );
 
         window.addEventListener('contextmenu', (e) => e.preventDefault());
         window.addEventListener('resize', () => this.resizeWindow());
-        this.resizeWindow();
+    }
+
+    #setupCanvas() {
+        const canvas = document.getElementById(CANVAS_ID);
+        canvas.width = DESIGN_WIDTH;
+        canvas.height = DESIGN_HEIGHT;
+        canvas.style.width = `${DESIGN_WIDTH}px`;
+        canvas.style.height = `${DESIGN_HEIGHT}px`;
+        return canvas;
+    }
+
+    #setupUI() {
+        const ui = document.getElementById(UI_LAYER_ID);
+        ui.style.width = `${DESIGN_WIDTH}px`;
+        ui.style.height = `${DESIGN_HEIGHT}px`;
+        return ui;
     }
 
     #setupKeyboardHandler() {
@@ -47,8 +68,12 @@ class DungeonMachine {
         const w = window.innerWidth;
         const h = window.innerHeight;
 
-        this.renderer.resize(w, h);
-        this.uiManager.resize(w, h, this.renderer.canvas);
+        const scaleX = w / DESIGN_WIDTH;
+        const scaleY = h / DESIGN_HEIGHT;
+
+        const scale = Math.min(scaleX, scaleY);
+
+        this.gameContainer.style.transform = `scale(${scale})`;
     }
 
     run() {

@@ -1,19 +1,19 @@
 export class UiManager {
     constructor(uiLayer) {
         this.uiLayer = uiLayer;
-    }
-
-    resize(windowWidth, windowHeight, canvas) {
-        const rect = canvas.getBoundingClientRect();
-        
-        const scaleX = rect.width / windowWidth;
-        const scaleY = rect.height / windowHeight;
-
-        this.uiLayer.style.transform = `scale(${scaleX}, ${scaleY})`;
-        this.uiLayer.style.transformOrigin = 'top left';
+        this.elements = [];
     }
 
     addElement(element) {
+        this.elements.push(element);
         this.uiLayer.appendChild(element.element);
+    }
+
+    getWidth() {
+        return parseInt(this.uiLayer.style.width);
+    }
+
+    getHeight() {
+        return parseInt(this.uiLayer.style.height);
     }
 }

@@ -2,7 +2,12 @@ const DIV_TAG = 'div';
 const INPUT_TAG = 'input';
 
 export class UiElement {
-    constructor(x, y, width, height, tag = DIV_TAG) {
+    constructor(x, y, width, height, centered = false, tag = DIV_TAG) {
+        if(centered) {
+            x -= width / 2;
+            y -= height / 2;
+        }
+
         this.element = this.#setupElement(x, y, width, height, tag);
     }
 
@@ -23,8 +28,8 @@ export class UiElement {
 }
 
 export class TextInput extends UiElement {
-    constructor(x, y, width, height) {
-        super(x, y, width, height, INPUT_TAG);
+    constructor(x, y, width, height, centered = false) {
+        super(x, y, width, height, centered, INPUT_TAG);
         this.element.type = 'text';
     }
 }
