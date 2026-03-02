@@ -1,29 +1,52 @@
-from dataclasses import dataclass
-
-from logic.game.state import GameState
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from logic.game.event import GameEvent
+from dataclasses import dataclass, field
+from abc import ABC
 
 @dataclass
-class SceneSchema:
-    narrative: str
-    events: list[GameEvent]
+class SceneSequence(ABC):
+    content: str
+
+    @property
+    def sequence_type(self) -> str:
+        return self.__class__.__name__.removesuffix("Sequence")
+
+    def format_sequence(self) -> str:
+        """Returns the labeled version: <type>: <content>"""
+        return f"{self.sequence_type}: {self.content}"
+
+
+@dataclass
+class GameIntroductionSequence(SceneSequence):
+    pass
+
+@dataclass
+class PlayerInputSequence(SceneSequence):
+    player_name:str
+
+    def format_sequence(self) -> str:
+        return f"{self.sequence_type} - {self.player_name}: {self.content}"
+
+@dataclass
+class SceneDescriptionSequence(SceneSequence):
+    pass
+
+@dataclass
+class ActionDescriptionSequence(SceneSequence):
+    pass
+
+@dataclass
+class EngineEventSequence(SceneSequence):
+    pass
 
 @dataclass
 class Scene:
-    schema: SceneSchema
-    game_state: GameState
+    scene_sequences: list[SceneSequence] = field(default_factory=list)
 
-    @property
-    def narrative(self) -> str:
-        return self.schema.narrative
-    
-    def to_dict(self):
-        return {
-            'narrative': self.narrative,
-            'events_invoked_at_scene': [e.to_dict() for e in self.schema.events],
-            'game_state_after_events': self.game_state.to_dict()
-        }
+    def add(self, sequence: SceneSequence):
+        self.scene_sequences.append(sequence)
+
+    def get_scene_content(self) -> str:
+        """Joins all sequences into a single formatted string."""
+        return "\n".join(seq.format_sequence() for seq in self.scene_sequences)
+
+    def __iter__(self):
+        return iter(self.scene_sequences)

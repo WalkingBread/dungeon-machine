@@ -1,7 +1,7 @@
 import pytest
 import logging
-from app.logic.modelmanager.configured.model_manager_configured_impl import ModelManagerConfiguredImpl
-from app.logic.modelmanager.configured.models import StoryUpdate
+from logic.brain.modelmanager.model_manager import ModelManagerConfiguredImpl
+from logic.brain.modelmanager.request_structures import StoryUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ class TestModelManagerConfiguredImpl:
             print(f"\n--- REACTION OUTPUT ---")
             print(f"ROLLS REQUESTED: {response.rolls}")
 
-            from app.logic.modelmanager.configured.models import RollDecision, StatisticType
+            from logic.brain.modelmanager.request_structures import RollDecision, StatisticType
 
             assert isinstance(response, RollDecision), "Should return a RollDecision instance"
             assert isinstance(response.rolls, list), "Rolls should be a list"
