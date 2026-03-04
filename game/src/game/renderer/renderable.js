@@ -1,5 +1,10 @@
 export class Renderable {
+    render(renderer, x, y) {}
+}
+
+export class BoxRenderable extends Renderable {
     constructor(width, height) {
+        super();
         this.width = width;
         this.height = height;
     }
@@ -15,7 +20,7 @@ export class Renderable {
     draw(renderer, x, y) {}
 }
 
-export class Sprite extends Renderable {
+export class Sprite extends BoxRenderable {
     constructor(image, width, height) {
         super(width, height);
         this.image = image;

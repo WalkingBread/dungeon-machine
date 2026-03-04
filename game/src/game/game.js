@@ -1,6 +1,6 @@
 import { GameLoop } from './loop.js'
 import { Renderer } from './renderer/renderer.js';
-import { MenuState } from './state.js'
+import { MenuState } from './state/menu.js'
 import { UiManager } from './ui/manager.js';
 
 const FPS = 30;

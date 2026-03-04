@@ -9,6 +9,13 @@ export class UiManager {
         this.uiLayer.appendChild(element.element);
     }
 
+    addElements(elements) {
+        this.elements.push(elements);
+        elements.forEach(element => {
+            this.uiLayer.appendChild(element.element);
+        });
+    }
+
     getWidth() {
         return parseInt(this.uiLayer.style.width);
     }
