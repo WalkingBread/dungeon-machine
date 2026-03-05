@@ -13,9 +13,13 @@ class PlayerStatus(Enum):
 
 class Player:
     def __init__(self, id: str, username: str):
-        self.id = id
+        self._id = id
         self.username = username
         self.status = PlayerStatus.CREATING_CHARACTER
+
+    @property
+    def id(self):
+        return self._id
 
     @property
     def ready(self):
@@ -23,10 +27,14 @@ class Player:
 
 class GameSession:
     def __init__(self, id: str):
-        self.id = id
+        self._id = id
         self._game_master = GameMaster()
         self._players: dict[str, Player] = {}
         self._player_characters: dict[str, PlayerCharacter] = {}
+
+    @property
+    def id(self):
+        return self._id
 
     @property
     def game_master(self):
@@ -42,6 +50,13 @@ class GameSession:
             if not p.ready:
                 return False
         return True
+    
+    @property
+    def player_count(self):
+        return len(self._players)
+    
+    def get_player(self, player_id):
+        return self._players[player_id]
     
     def create_character(self, player: Player, name: str) -> PlayerCharacter:
         if player not in self._players.values():
@@ -76,3 +91,6 @@ class SessionManager:
         session = GameSession(session_id)
         self._sessions[session_id] = session
         return session
+    
+    def get_session(self, id: str):
+        return self._sessions[id]
