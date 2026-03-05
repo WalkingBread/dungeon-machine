@@ -1,18 +1,22 @@
 from logic.game import GameMaster
 from logic.game.character import PlayerCharacter
 from enum import Enum
-import uuid
+from uuid import uuid4, UUID
 
 class PlayerNotJoinedError(Exception):
     def __init__(self, player: Player):
         super().__init__(f'Player {player.username} has not joined the game.')
+
+class CharacterAlreadyCreatedError(Exception):
+    def __init__(self, player: Player):
+        super().__init__(f'Player {player.username} has already created a character.')
 
 class PlayerStatus(Enum):
     CREATING_CHARACTER = 'Creating character...'
     READY = 'Ready.'
 
 class Player:
-    def __init__(self, id: str, username: str):
+    def __init__(self, id: UUID, username: str):
         self._id = id
         self.username = username
         self.status = PlayerStatus.CREATING_CHARACTER
@@ -26,11 +30,11 @@ class Player:
         return self.status is PlayerStatus.READY
 
 class GameSession:
-    def __init__(self, id: str):
+    def __init__(self, id: UUID):
         self._id = id
         self._game_master = GameMaster()
-        self._players: dict[str, Player] = {}
-        self._player_characters: dict[str, PlayerCharacter] = {}
+        self._players: dict[UUID, Player] = {}
+        self._player_characters: dict[UUID, PlayerCharacter] = {}
 
     @property
     def id(self):
@@ -59,8 +63,11 @@ class GameSession:
         return self._players[player_id]
     
     def create_character(self, player: Player, name: str) -> PlayerCharacter:
-        if player not in self._players.values():
+        if player.id not in self._players:
             raise PlayerNotJoinedError(player)
+        
+        if player.id in self._player_characters:
+            raise CharacterAlreadyCreatedError(player)
         
         character = PlayerCharacter.generate_character(name)
         self._player_characters[player.id] = character
@@ -68,7 +75,7 @@ class GameSession:
         return character
 
     def join(self, username) -> Player:
-        player_id = str(uuid.uuid4())
+        player_id = uuid4()
         player = Player(player_id, username)
         self._players[player_id] = player
         return player
@@ -84,13 +91,13 @@ class GameSession:
     
 class SessionManager:
     def __init__(self):
-        self._sessions: dict[str, GameSession] = {}
+        self._sessions: dict[UUID, GameSession] = {}
 
     def create_session(self) -> GameSession:
-        session_id = str(uuid.uuid4())
+        session_id = uuid4()
         session = GameSession(session_id)
         self._sessions[session_id] = session
         return session
     
-    def get_session(self, id: str):
+    def get_session(self, id: UUID):
         return self._sessions[id]

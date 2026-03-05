@@ -3,6 +3,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from logic.game.session import SessionManager
 from services.game import GameService, SessionNotFoundError, SessionFullError, PlayersNotReadyError
+from models.character import PlayerCharacterResponse
 from pydantic import BaseModel
 
 GLOBAL_SESSION_MANAGER = SessionManager()
@@ -55,11 +56,15 @@ class CreateCharacterRequest(BaseModel):
     player_id: str
     name: str
 
-@app.post('/session/{session_id}/create-character')
+@app.post('/session/{session_id}/create-character', response_model=PlayerCharacterResponse)
 def create_character(session_id: str, data: CreateCharacterRequest,
                      service: GameService = Depends(get_game_service)):
-    character = service.create_character(session_id, data.player_id, data.name)
-    return {}
+    try:
+        character = service.create_character(session_id, data.player_id, data.name)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    return character
 
 PORT = 8000
 
