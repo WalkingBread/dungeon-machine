@@ -2,6 +2,7 @@ import { State } from './state.js'
 import { Renderable, Sprite } from '../renderer/renderable.js'
 import { GameImage } from '../renderer/image.js';
 import { TextInput, Button} from '../ui/element.js'
+import { CreateGameState } from './creategame.js';
 
 const LOGO_SRC = 'https://www.pngmart.com/files/23/Dungeons-And-Dragons-Logo-PNG-File.png';
 
@@ -45,8 +46,8 @@ function isValidUsername(username) {
 }
 
 export class MenuState extends State {
-    constructor(renderer, uiManager) {
-        super(renderer, uiManager);
+    constructor(game) {
+        super(game);
     }
 
     enter() {
@@ -54,7 +55,7 @@ export class MenuState extends State {
 
         this.usernameText = new UsernameText();
 
-        const centerX = this.uiManager.getWidth() / 2;
+        const centerX = this.game.uiManager.getWidth() / 2;
 
         this.usernameInput = new UsernameTextInput(centerX, 470);
         this.createGameButton = new CreateGameButton(centerX, 650);
@@ -71,14 +72,15 @@ export class MenuState extends State {
         };
 
         this.createGameButton.onClick = () => {
-
+            const username = this.usernameInput.getValue();
+            this.game.setState(new CreateGameState(this.game, username));
         };
 
         this.joinGameButton.onClick = () => {
-
+            
         };
 
-        this.uiManager.addElements([
+        this.game.uiManager.addElements([
             this.usernameInput,
             this.createGameButton,
             this.joinGameButton
@@ -86,10 +88,10 @@ export class MenuState extends State {
     }
 
     render() {
-        const centerX = this.uiManager.getWidth() / 2;
+        const centerX = this.game.uiManager.getWidth() / 2;
 
-        this.logo.render(this.renderer, centerX, 200, true);
-        this.usernameText.render(this.renderer, centerX, 400);
+        this.logo.render(this.game.renderer, centerX, 200, true);
+        this.usernameText.render(this.game.renderer, centerX, 400);
     }
 
     update() {}

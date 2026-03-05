@@ -23,4 +23,9 @@ export class UiManager {
     getHeight() {
         return parseInt(this.uiLayer.style.height);
     }
+
+    clear() {
+        this.uiLayer.innerHTML = '';
+        this.elements = [];
+    }
 }

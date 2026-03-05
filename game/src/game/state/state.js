@@ -1,7 +1,7 @@
 export class State {
-    constructor(renderer, uiManager) {
-        this.renderer = renderer;
-        this.uiManager = uiManager;
+    constructor(game) {
+        this.game = game;
+        this.game.uiManager.clear();
     }
 
     enter() {}

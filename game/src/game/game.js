@@ -15,7 +15,7 @@ export class Game {
         this.loop = this.#setupLoop(loop_config);
         this.state = null;
 
-        this.#setState(new MenuState(this.renderer, this.uiManager));
+        this.setState(new MenuState(this));
     }
 
     #setupLoop(loop_config) {
@@ -27,7 +27,7 @@ export class Game {
         .setTick(() => this.#update());
     }
 
-    #setState(state) {
+    setState(state) {
         if(this.state) {
             this.state.exit();
         }
