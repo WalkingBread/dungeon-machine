@@ -2,9 +2,10 @@ import uvicorn
 
 from fastapi import FastAPI, HTTPException, Depends
 from logic.game.session import SessionManager
-from services.game import GameService, SessionNotFoundError, SessionFullError, PlayersNotReadyError
-from models.character import PlayerCharacterResponse
-from pydantic import BaseModel
+from services.game import GameService, SessionNotFoundError, SessionFullError, PlayersNotReadyError, PlayerNotFoundError
+from models.character import CreateCharacterResponse, CreateCharacterRequest
+from models.game import CreateGameResponse, JoinGameRequest, JoinGameResponse, StartGameRequest
+from uuid import UUID
 
 GLOBAL_SESSION_MANAGER = SessionManager()
 
@@ -17,16 +18,12 @@ app = FastAPI()
 def read_root():
     return {"message": "dungeon machine"}
 
-@app.post('/create-game')
+@app.post('/create-game', response_model=CreateGameResponse)
 def create_game(service: GameService = Depends(get_game_service)):
-    session = service.create_game()
-    return {"session_id": session.id}
+    return service.create_game()
 
-class JoinRequest(BaseModel):
-    username: str
-
-@app.post('/session/{session_id}/join')
-def join_game(session_id: str, data: JoinRequest, 
+@app.post('/session/{session_id}/join', response_model=JoinGameResponse)
+def join_game(session_id: UUID, data: JoinGameRequest, 
               service: GameService = Depends(get_game_service)):
     try:
         player = service.join_game(session_id, data.username)
@@ -37,30 +34,36 @@ def join_game(session_id: str, data: JoinRequest,
     except SessionFullError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-    return {'player_id': player.id}
+    return player
 
-class StartGameRequest(BaseModel):
-    game_theme: str
 
 @app.post('/session/{session_id}/start-game')
-def start_game(session_id: str, data: StartGameRequest,
+def start_game(session_id: UUID, data: StartGameRequest,
                      service: GameService = Depends(get_game_service)):
     try:
         service.start_game(session_id, data.game_theme)
+
+    except SessionNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
     except PlayersNotReadyError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
     return {'message': 'Game started.'}
 
-class CreateCharacterRequest(BaseModel):
-    player_id: str
-    name: str
 
-@app.post('/session/{session_id}/create-character', response_model=PlayerCharacterResponse)
-def create_character(session_id: str, data: CreateCharacterRequest,
+@app.post('/session/{session_id}/create-character', response_model=CreateCharacterResponse)
+def create_character(session_id: UUID, data: CreateCharacterRequest,
                      service: GameService = Depends(get_game_service)):
     try:
         character = service.create_character(session_id, data.player_id, data.name)
+
+    except SessionNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
+    except PlayerNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     

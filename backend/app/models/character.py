@@ -1,6 +1,11 @@
 from pydantic import BaseModel, ConfigDict, Field
+from uuid import UUID
 
-class PlayerCharacterResponse(BaseModel):
+class CreateCharacterRequest(BaseModel):
+    player_id: UUID
+    name: str
+
+class CreateCharacterResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     name: str
     health: int

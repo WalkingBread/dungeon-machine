@@ -5,20 +5,20 @@ from functools import wraps
 SESSION_MAX_PLAYER_COUNT = 4
 
 class SessionNotFoundError(Exception):
-    def __init__(self, session_id: str):
-        super().__init__(f'Session of id {session_id} was not found.')
+    def __init__(self, session_id: UUID):
+        super().__init__(f'Session of id {str(session_id)} was not found.')
 
 class SessionFullError(Exception):
-    def __init__(self, session_id: str):
-        super().__init__(f'Session of id {session_id} is full.')
+    def __init__(self, session_id: UUID):
+        super().__init__(f'Session of id {str(session_id)} is full.')
 
 class InvalidUsernameError(Exception):
     def __init__(self, username: str):
         super().__init__(f'Username {username} is invalid.')
 
 class PlayerNotFoundError(Exception):
-    def __init__(self, player_id: str):
-        super().__init__(f'Player of id {player_id} was not found.')
+    def __init__(self, player_id: UUID):
+        super().__init__(f'Player of id {str(player_id)} was not found.')
 
 class PlayersNotReadyError(Exception):
     def __init__(self):
@@ -30,8 +30,8 @@ def _is_valid_username(username: str) -> bool:
 
 def validate_session(func):
     @wraps(func)
-    def wrapper(self, session_id, *args, **kwargs):
-        session = self._session_manager.get_session(UUID(session_id))
+    def wrapper(self, session_id: UUID, *args, **kwargs):
+        session = self._get_session(session_id)
         
         if not session:
             raise SessionNotFoundError(session_id)
@@ -41,8 +41,8 @@ def validate_session(func):
 
 def validate_player(func):
     @wraps(func)
-    def wrapper(self, session: GameSession, player_id: str, *args, **kwargs):
-        player = session.get_player(UUID(player_id))
+    def wrapper(self, session: GameSession, player_id: UUID, *args, **kwargs):
+        player = session.get_player(player_id)
         
         if not player:
             raise PlayerNotFoundError(player_id)
@@ -57,8 +57,8 @@ class GameService:
     def create_game(self) -> GameSession:
         return self._session_manager.create_session()
     
-    def _get_session(self, session_id: str) -> GameSession:
-        return self._session_manager.get_session(UUID(session_id))
+    def _get_session(self, session_id: UUID) -> GameSession:
+        return self._session_manager.get_session(session_id)
 
     @validate_session
     def join_game(self, session: GameSession, username: str):

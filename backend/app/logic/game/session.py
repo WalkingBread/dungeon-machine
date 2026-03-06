@@ -59,8 +59,8 @@ class GameSession:
     def player_count(self):
         return len(self._players)
     
-    def get_player(self, player_id):
-        return self._players[player_id]
+    def get_player(self, player_id: UUID):
+        return self._players.get(player_id)
     
     def create_character(self, player: Player, name: str) -> PlayerCharacter:
         if player.id not in self._players:
@@ -100,4 +100,4 @@ class SessionManager:
         return session
     
     def get_session(self, id: UUID):
-        return self._sessions[id]
+        return self._sessions.get(id)
