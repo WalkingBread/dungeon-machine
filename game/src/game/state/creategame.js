@@ -1,6 +1,19 @@
 import { State } from "./state.js";
+import { createSession } from "../session/session.js";
+import { Renderable } from "../renderer/renderable.js";
+import { wait } from "../utils/async.js";
+import { LobbyState } from "./lobby.js";
 
-const CREATE_SESSION_ENDPOINT = 'http://localhost:8080/';
+class LoadingText extends Renderable {
+    constructor() {
+        super();
+        this.text = '';
+    }
+
+    render(renderer, x, y) {
+        renderer.renderText(this.text, x, y, 60, 'Arial', '#fff', true);
+    }
+}
 
 export class CreateGameState extends State {
     constructor(game, username) {
@@ -8,24 +21,27 @@ export class CreateGameState extends State {
         this.username = username;
     }
 
-    enter() {
-        
+    async enter() {
+        this.loadingText = new LoadingText();
+        this.loadingText.text = 'Creating game session...';
+
+        const session = await createSession();
+
+        await wait(1000);
+        this.loadingText.text = 'Joining...'
+
+        const player = await session.join(this.username);
+
+        await wait(1000);
+        this.game.setState(new LobbyState(this.game, session, player));
     }
 
-    render() {}
+    render() {
+        const renderer = this.game.renderer;
 
-    update() {}
+        const centerX = renderer.getWindowWidth() / 2;
+        const centerY = renderer.getWindowHeight() / 2;
 
-    exit() {}
-
-    async createSession() {
-        try {
-            const response = await fetch(CREATE_SESSION_ENDPOINT);
-
-        } catch(error) {
-            
-        }
-        
-
+        this.loadingText.render(renderer, centerX, centerY);
     }
 }

@@ -93,8 +93,4 @@ export class MenuState extends State {
         this.logo.render(this.game.renderer, centerX, 200, true);
         this.usernameText.render(this.game.renderer, centerX, 400);
     }
-
-    update() {}
-
-    exit() {}
 }

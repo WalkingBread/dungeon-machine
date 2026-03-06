@@ -5,6 +5,10 @@ class CreateGameResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     session_id: UUID = Field(validation_alias="id")
 
+class GetGameResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    session_id: UUID = Field(validation_alias="id")
+
 class JoinGameRequest(BaseModel):
     username: str
 
