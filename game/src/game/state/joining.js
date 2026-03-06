@@ -1,8 +1,7 @@
+import { LobbyState } from "./lobby.js";
 import { State } from "./state.js";
-import { createSession } from "../session/session.js";
 import { Renderable } from "../renderer/renderable.js";
 import { wait } from "../utils/async.js";
-import { JoiningState } from "./joining.js";
 
 class LoadingText extends Renderable {
     constructor() {
@@ -10,29 +9,29 @@ class LoadingText extends Renderable {
     }
 
     render(renderer, x, y) {
-        renderer.renderText('Creating game session...', x, y, 60, 'Arial', '#fff', true);
+        renderer.renderText('Joining...', x, y, 60, 'Arial', '#fff', true);
     }
 }
 
-export class CreateGameState extends State {
-    constructor(game, username) {
+export class JoiningState extends State {
+    constructor(game, session, username) {
         super(game);
+        this.session = session;
         this.username = username;
     }
 
     async enter() {
         this.loadingText = new LoadingText();
 
-        const session = await createSession();
+        const player = await this.session.join(this.username);
 
         await wait(1000);
-       
-        this.game.setState(new JoiningState(this.game, session, this.username));
+               
+        this.game.setState(new LobbyState(this.game, this.session, player));
     }
 
     render() {
         const renderer = this.game.renderer;
-
         this.loadingText.render(renderer, renderer.getCenterX(), renderer.getCenterY());
     }
 }

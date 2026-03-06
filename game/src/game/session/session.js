@@ -1,3 +1,5 @@
+import { request } from "../utils/api.js";
+
 const HOST = 'localhost';
 const PORT = 8000;
 const BASE_URL = `http://${HOST}:${PORT}`
@@ -16,48 +18,24 @@ class GameSession {
     async join(username) {
         const ENDPOINT = `${BASE_URL}/session/${this.id}/join`;
 
-        const response = await fetch(ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: username })
-        });
+        const playerData = await request(ENDPOINT, 'POST', { username : username })
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || "Failed to join session");
-        }
-
-        const data = await response.json();
-
-        console.log(`Joined as ${username}. Player ID: ${data.player_id}`);
-
-        return new Player(data.player_id);
+        return new Player(playerData.player_id);
     }
 }
 
 export async function createSession() {
-    const ENDPOINT = `${BASE_URL}/create-game`
+    const ENDPOINT = `${BASE_URL}/create-game`;
 
-    try {
-        const response = await fetch(ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
+    const sessionData = await request(ENDPOINT, 'POST');
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Error ${response.status}: ${errorData.detail}`);
-        }
+    return new GameSession(sessionData.session_id);
+}
 
-        const data = await response.json();
-        console.log("Game created! Session ID:", data.session_id);
-        
-        return new GameSession(data.session_id);
+export async function getSession(sessionId) {
+    const ENDPOINT = `${BASE_URL}/session/${sessionId}`;
 
-    } catch (error) {
-        console.error("Failed to create game:", error.message);
-        throw error;
-    }
+    const sessionData = await request(ENDPOINT, 'GET');
+
+    return new GameSession(sessionData.session_id);
 }

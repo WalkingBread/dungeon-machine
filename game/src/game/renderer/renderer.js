@@ -32,6 +32,14 @@ export class Renderer {
         }
     }
 
+    getCenterX() {
+        return this.getWindowWidth() / 2;
+    }
+
+    getCenterY() {
+        return this.getWindowHeight() / 2;
+    }
+
     getWindowWidth() {
         return this.canvas.width;
     }

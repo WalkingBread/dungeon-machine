@@ -3,6 +3,7 @@ import { Renderable, Sprite } from '../renderer/renderable.js'
 import { GameImage } from '../renderer/image.js';
 import { TextInput, Button} from '../ui/element.js'
 import { CreateGameState } from './creategame.js';
+import { JoinGameState } from './joingame.js';
 
 const LOGO_SRC = 'https://www.pngmart.com/files/23/Dungeons-And-Dragons-Logo-PNG-File.png';
 
@@ -77,7 +78,8 @@ export class MenuState extends State {
         };
 
         this.joinGameButton.onClick = () => {
-            
+            const username = this.usernameInput.getValue();
+            this.game.setState(new JoinGameState(this.game, username));
         };
 
         this.game.uiManager.addElements([

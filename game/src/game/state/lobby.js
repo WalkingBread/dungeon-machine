@@ -25,7 +25,7 @@ export class LobbyState extends State {
 
     render() {
         const renderer = this.game.renderer;
-        const centerX = renderer.getWindowWidth() / 2;
+        const centerX = renderer.getCenterX();
 
         this.sessionIdText.render(renderer, centerX, 40);
     }
