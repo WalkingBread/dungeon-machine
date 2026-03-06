@@ -1,17 +1,14 @@
-from dataclasses import dataclass
-from app.logic.character import Inventory
+from pydantic import BaseModel, ConfigDict, Field
+from uuid import UUID
 
-@dataclass
-class Character:
+class CreateCharacterRequest(BaseModel):
+    player_id: UUID
     name: str
-    description: str
+
+class CreateCharacterResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    name: str
     health: int
-    strength: int
-    agility: int
-    intelligence: int
-    luck: int
-    charisma: int
+    max_health: int
     money: int
-    # inventory: Inventory
-
-
+    stats: dict[str, int] = Field(validation_alias="stats_dict")

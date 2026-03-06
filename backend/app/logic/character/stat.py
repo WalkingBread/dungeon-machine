@@ -54,6 +54,9 @@ class Statistics:
         lines = [f"  {s.name.title():<12} : {inst.value:>3}" for s, inst in self.stats.items()]
         return "Statistics:\n" + "\n".join(lines)
     
+    def to_dict(self) -> dict[str, int]:
+        return {type.name.title(): value.value for type, value in self.stats.items()}
+    
     def upgrade_stat(self, stat_type: StatType, value: int = 1):
         self.stats[stat_type] += value
 

@@ -1,18 +1,17 @@
-from logic.character import Character
-from logic.game.game_master import GameMaster
+from logic.game.session import SessionManager
 
-players = [Character.generate_character('Adam')]
+session_manager = SessionManager()
+session = session_manager.create_session()
 
-gm = GameMaster()
-gm.create_game("", players)
-gm.introduce_story()
+player = session.join('pussydestroyer')
+player_character = session.create_character(player, 'Ser Duncan The Tall')
 
-# init done
+game_master = session.game_master
 
-gm.start_next_scene()
-gm.handle_player_action(players[0], "I am shouting like crazy to rise the attention of the nearby people!")
-
-for scene in gm.story:
-    print(scene.get_scene_content())
-
-print("i use this as debugging breakpoint :)")
+started = session.start_game('medieval')
+if started:
+    game_master.introduce_story()
+    game_master.handle_player_action(player_character, 'I try to kill everyone in sight with my bare hands.')
+    print(game_master.current_scene)
+else:
+    print('Not all players are ready.')
