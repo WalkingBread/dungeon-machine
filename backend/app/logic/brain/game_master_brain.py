@@ -1,10 +1,11 @@
 from logic.brain.contextparser.context_parser_impl import ContextParserImpl
 from logic.brain.modelmanager.model_manager import ModelManager
 from logic.brain.responseparser.response_parser import ResponseParser
+from logic.brain.player_action_outcome import PlayerActionOutcome
 from logic.game.game import GameState
 from logic.game.game_event import GameEvent
-from logic.game.scene import SceneDescriptionSequence, ActionDescriptionSequence, Scene, GameIntroductionSequence
-
+from logic.game.player_action import PlayerAction
+from logic.game.scene import SceneDescriptionSequence, Scene, GameIntroductionSequence
 
 class GameMasterBrain:
     def __init__(self):
@@ -26,9 +27,9 @@ class GameMasterBrain:
         story_update = self._model_manager.provide_scene_setting(context)
         return self._response_parser.parse_to_scene_setting(story_update)
 
-    def provide_player_action_outcome(self, history: list[Scene], game_state: GameState) \
-            -> tuple[ActionDescriptionSequence, list[GameEvent]]:
+    def provide_player_actions_outcome(self, history: list[Scene], actions: list[PlayerAction], game_state: GameState) \
+            -> list[PlayerActionOutcome]:
 
-        context = self._context_parser.parse_to_player_action_outcome_context(history, game_state)
-        action_outcome = self._model_manager.provide_player_action_outcome(context)
-        return self._response_parser.parse_to_player_action_outcome(action_outcome)
+        context = self._context_parser.parse_to_player_action_outcome_context(history, actions, game_state)
+        action_outcomes = self._model_manager.provide_player_action_outcome(context)
+        return self._response_parser.parse_to_player_action_outcome(action_outcomes)

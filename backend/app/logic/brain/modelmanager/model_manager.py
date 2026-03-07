@@ -1,7 +1,7 @@
 from logic.brain.modelmanager.llm_payload_formater import prepare_llm_story_payload
 from logic.brain.modelmanager.prompts import get_storyteller_prompt, get_reaction_prompt
 from genai.models import get_gpt_five, get_gpt_five_mini
-from logic.brain.modelmanager.request_structures import StoryUpdate, PlayerActionOutcome
+from logic.brain.modelmanager.request_structures import StoryUpdate, PlayerActionOutcomes
 
 STORYTELLER_MODEL_DICT_NAME = "storyteller_model"
 REACTION_MODEL_DICT_NAME = "reaction_model"
@@ -26,7 +26,7 @@ class ModelManager:
 
         reaction_chain = (
             get_reaction_prompt() | get_gpt_five_mini().with_structured_output(
-                PlayerActionOutcome,
+                PlayerActionOutcomes,
                 method="function_calling"
             )
         )
@@ -36,7 +36,7 @@ class ModelManager:
         llm_payload = prepare_llm_story_payload(model_context)
         return self._model_dict[STORYTELLER_MODEL_DICT_NAME].invoke(llm_payload)
 
-    def provide_player_action_outcome(self, model_context: dict) -> PlayerActionOutcome:
+    def provide_player_action_outcome(self, model_context: dict) -> PlayerActionOutcomes:
         llm_payload = prepare_llm_story_payload(model_context)
         return self._model_dict[REACTION_MODEL_DICT_NAME].invoke(llm_payload)
         

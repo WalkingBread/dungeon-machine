@@ -3,41 +3,26 @@ from typing import Union, Literal, Annotated
 from enum import Enum, auto
 
 class AddCharacter(BaseModel):
-    event_type: Literal["add_character"] = Field(
-        default="add_character",
-        description="Creates a new character entry."
-    )
-    character_name: str = Field(..., description="Unique name of the character (ex. 'Orc 1').")
-    health_amount: int = Field(..., gt=0, description="The initial value of character's health.")
+    event_type: Literal["add_character"] = "add_character"
+    character_name: str = Field(..., description="The entering character's name.")
+    health_amount: int = Field(..., gt=0, description="Initial health.")
+
 
 class ChangeHealth(BaseModel):
-    event_type: Literal["change_health"] = Field(
-        default="change_health",
-        description="Adjusts health of an existing character."
-    )
-    character_name: str = Field(..., description="Target character's name.")
-    health_amount: int = Field(..., description="The change to the character's health that should be done, negative values means decrement.")
+    event_type: Literal["change_health"] = "change_health"
+    character_name: str = Field(..., description="The target character's name.")
+    health_amount: int = Field(..., description="Change value (negative = damage).")
 
 class DeleteCharacter(BaseModel):
-    event_type: Literal["delete_character"] = Field(
-        default="delete_character",
-        description="Removes a character from the state."
-    )
-    character_name: str = Field(..., description="Target character's name.")
+    event_type: Literal["delete_character"] = "delete_character"
+    character_name: str = Field(..., description="The target character's name.")
 
-GameEvent = Annotated[
-    Union[AddCharacter, ChangeHealth, DeleteCharacter],
-    Field(discriminator="event_type")
-]
-
-class StoryUpdate(BaseModel):
-    new_story_segment: str = Field(
+class DiceRoll(BaseModel):
+    event_type: Literal["dice_roll"] = "dice_roll"
+    character_name: str = Field(..., description="The name of player's character that is supposed to roll.")
+    statistic: "StatisticType" = Field(
         ...,
-        description="The next part of the narrative based on the previous story segment."
-    )
-    engine_events: list[GameEvent] = Field(
-        default_factory=list,
-        description="The technical state changes triggered by this story segment.",
+        description="The stat to use. Use NO_STATISTIC for flat rolls."
     )
 
 class StatisticType(Enum):
@@ -50,20 +35,27 @@ class StatisticType(Enum):
     LUCK = auto()
     CHARISMA = auto()
 
-class DiceRoll(BaseModel):
-    name: str = Field(default="dice_roll")
-    character_name: str = Field(..., description="The character to perform the action.")
-    statistic: StatisticType = Field(
+SceneSettingEvent = Annotated[
+    Union[AddCharacter, ChangeHealth, DeleteCharacter],
+    Field(discriminator="event_type")
+]
+
+ActionOutcomeEvent = Annotated[
+    Union[ChangeHealth, DiceRoll],
+    Field(discriminator="event_type")
+]
+
+class IndividualOutcome(BaseModel):
+    description: str = Field(..., description="A complete description of the player's action outcome up to this point.")
+    rolls: list[ActionOutcomeEvent] = Field(default_factory=list, description="A list of events related to the outcome of the "
+                                                                              "player's action up to this point.")
+
+class PlayerActionOutcomes(BaseModel):
+    character_outcomes: dict[str, IndividualOutcome] = Field(
         ...,
-        description="The stat to use. Use NO_STAT for flat rolls with no modifiers."
+        description="A map of character names to their specific situational consequences."
     )
 
-class PlayerActionOutcome(BaseModel):
-    description: str = Field(
-        ...,
-        description="A very short summary of the triggering event(s) (e.g., 'The guard notices you' or 'A heavy stone door slides shut')."
-    )
-    rolls: list[DiceRoll] = Field(
-        default_factory=list,
-        description="The physical tests required to respond to this event."
-    )
+class StoryUpdate(BaseModel):
+    new_story_segment: str = Field(..., description="The next part of the narrative.")
+    engine_events: list[SceneSettingEvent] = Field(default_factory=list)

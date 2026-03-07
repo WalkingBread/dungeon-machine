@@ -1,4 +1,7 @@
-from langchain_core.prompts import ChatPromptTemplate
+import json
+
+from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate
+
 
 def get_storyteller_prompt() -> ChatPromptTemplate:
     system_message = (
@@ -21,21 +24,108 @@ def get_storyteller_prompt() -> ChatPromptTemplate:
     return prompt
 
 def get_reaction_prompt() -> ChatPromptTemplate:
-    system_message = (
-        "You are the Game Referee. Describe the results of the action initiated by the user, then"
-        "analyze the narrative context to determine if any "
-        "character actions require a dice roll.\n\n"
-        "STAT MAPPING RULES:\n"
-        "- STRENGTH: Physical force, athletics.\n"
-        "- AGILITY: Finesse, stealth, speed.\n"
-        "- INTELLIGENCE: Logic, memory, magic.\n"
-        "- LUCK: Pure probability or external fate.\n"
-        "- CHARISMA: Social influence, willpower.\n"
-        "- NO_STAT: Use this for basic checks of chance where character skill is irrelevant.\n\n"
+    examples = [
+        {
+            "model_context": json.dumps({
+                "pending_actions": [{
+                    "player": "Valerius",
+                    "player_intent": "I try to pick the lock on the heavy iron chest.",
+                    "completed_steps": [],
+                    "active_event": None
+                }]
+            }),
+            "output": json.dumps({
+                "character_outcomes": {
+                    "Valerius": {
+                        "description": "You kneel before the chest, feeling for the tumblers with your picks.",
+                        "rolls": [{"event_type": "dice_roll", "character_name": "Valerius", "statistic": "AGILITY"}]
+                    }
+                }
+            })
+        },
+        {
+            "model_context": json.dumps({
+                "pending_actions": [{
+                    "player": "Valerius",
+                    "player_intent": "I try to pick the lock on the heavy iron chest.",
+                    "completed_steps": [],
+                    "active_event": {"stat": "AGILITY", "result": "SUCCESS"}
+                }]
+            }),
+            "output": json.dumps({
+                "character_outcomes": {
+                    "Valerius": {
+                        "description": "With a satisfying click, the lock yields. You throw the lid back. Let's see what's inside.",
+                        "rolls": [{"event_type": "dice_roll", "character_name": "Valerius", "statistic": "LUCK"}]
+                    }
+                }
+            })
+        },
+        {
+            "model_context": json.dumps({
+                "pending_actions": [{
+                    "player": "Valerius",
+                    "player_intent": "I try to pick the lock on the heavy iron chest.",
+                    "completed_steps": [{
+                        "stat": "AGILITY",
+                        "result": "SUCCESS",
+                        "description": "With a satisfying click, the lock yields. You throw the lid back."
+                    }],
+                    "active_event": {"stat": "LUCK", "result": "EXTREME_FAILURE"}
+                }]
+            }),
+            "output": json.dumps({
+                "character_outcomes": {
+                    "Valerius": {
+                        "description": "The chest is empty save for a few cobwebs and a mocking note. You've wasted your time and a good pick.",
+                        "rolls": []
+                    }
+                }
+            })
+        },
+        {
+            "model_context": json.dumps({
+                "pending_actions": [{
+                    "player": "Valerius",
+                    "player_intent": "I try to pick the lock.",
+                    "completed_steps": [],
+                    "active_event": {"stat": "AGILITY", "result": "EXTREME_FAILURE"}
+                }]
+            }),
+            "output": json.dumps({
+                "character_outcomes": {
+                    "Valerius": {
+                        "description": "The pick snaps, and a needle trap springs from the keyhole, piercing your hand!",
+                        "rolls": [{"event_type": "change_health", "character_name": "Valerius", "health_amount": -5}]
+                    }
+                }
+            })
+        }
+    ]
+
+    example_prompt = ChatPromptTemplate.from_messages([
+        ("human", "## Game Context\n {model_context}"),
+        ("ai", "{output}")
+    ])
+
+    few_shot_prompt = FewShotChatMessagePromptTemplate(
+        example_prompt=example_prompt,
+        examples=examples,
     )
 
-    prompt = ChatPromptTemplate.from_messages([
+    system_message = (
+        "You are the Game Master. Your job is to drive the story forward by responding to player actions. "
+        "Every time you respond, you must make a choice: \n\n"
+        "1. IS THE ACTION FINISHED? If the player's intent is fully resolved by the current dice results, "
+        "describe the final outcome and include any 'change_health' events if they were hurt or healed.\n"
+        "2. IS ANOTHER ROLL NEEDED? If the player's intent requires more effort (e.g., they hit but need to "
+        "roll for damage, or they opened a chest but need to roll for luck), provide a description of current "
+        "status and add a new 'dice_roll' event to the list.\n\n"
+        "Always look at 'completed_steps' to see what has already happened so you don't repeat yourself."
+    )
+
+    return ChatPromptTemplate.from_messages([
         ("system", system_message),
-        ("human", "## Game Context\n {model_context}")
+        few_shot_prompt,
+        ("human", "## Game Context\n {model_context}"),
     ])
-    return prompt
