@@ -22,17 +22,15 @@ class ContextParserImpl(ContextParser):
 
     def parse_to_player_action_outcome_context(self, story: list[Scene], player_actions: list[PlayerAction],
                                                game_state: GameState) -> dict:
-        """
-        Prepares data specifically for the LLM to decide on dice rolls and
-        consequences based on the player's last move.
-        """
         current_scene = story[-1] if story else Scene()
 
         return {
-            "player characters": [self._character_to_dict(c) for c in game_state.player_characters],
-            "player actions": [self._serialize_player_action(a) for a in player_actions],
-            "npc characters": [self._character_to_dict(c) for c in game_state.npc_characters],
-            "current scene content": current_scene.get_scene_content(),
+            # Changed "player characters" -> "player_characters"
+            # "player_characters": [self._character_to_dict(c) for c in game_state.player_characters],
+            # Changed "player actions" -> "pending_actions" (MATCHES PROMPT)
+            "pending_actions": [self._serialize_player_action(a) for a in player_actions],
+            # "npc_characters": [self._character_to_dict(c) for c in game_state.npc_characters],
+            # "current_scene_content": current_scene.get_scene_content(),
         }
 
     def _serialize_player_action(self, action: PlayerAction) -> dict:

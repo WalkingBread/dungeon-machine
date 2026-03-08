@@ -1,36 +1,36 @@
-import yaml
+import json
+
 
 def prepare_llm_story_payload(model_context: dict) -> str:
     """
-    Takes a game state dict, cleans it, and returns a
-    Markdown-formatted string with YAML blocks.
+    Takes a game state dict and returns a clean JSON string.
+    We stop being aggressive so we don't delete the data we need.
     """
 
     def clean(data):
+        # 1. Handle Dictionaries
         if isinstance(data, dict):
-            cleaned_dict = {k: clean(v) for k, v in data.items()}
-            return {k: v for k, v in cleaned_dict.items()
-                    if v is not None and v != "" and v != {} and v != []}
+            # We only want to filter out literal None or empty strings.
+            # We KEEP empty lists [] and empty dicts {} so the LLM sees the structure.
+            return {
+                k: clean(v) for k, v in data.items()
+                if v is not None and v != ""
+            }
+
+        # 2. Handle Lists/Iterables
         elif isinstance(data, (list, tuple, set)):
-            cleaned_list = [clean(i) for i in data]
-            return [i for i in cleaned_list if i is not None and i != ""]
+            return [clean(i) for i in data if i is not None and i != ""]
+
+        # 3. Handle Base Types
         return data
 
     cleaned_data = clean(model_context)
-    output_parts = []
 
-    for category, content in cleaned_data.items():
-        # Capitalize header for better LLM attention (e.g., 'STORY')
-        header = f"### {category.upper()}"
+    # Fallback to empty dict if something went horribly wrong
+    if not isinstance(cleaned_data, dict):
+        cleaned_data = {}
 
-        yaml_block = yaml.dump(
-            content,
-            sort_keys=False,
-            default_flow_style=False,
-            allow_unicode=True
-        )
-
-        section = f"{header}\n```yaml\n{yaml_block}```"
-        output_parts.append(section)
-
-    return "\n\n".join(output_parts)
+    # Crucial: Return a dictionary wrapped in the key your prompt expects
+    # Your prompt uses: ("human", "## Game Context\n {model_context}")
+    # So we MUST return a dict where the key matches the prompt variable.
+    return json.dumps(cleaned_data, ensure_ascii=False, indent=2)

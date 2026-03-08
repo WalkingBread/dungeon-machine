@@ -52,7 +52,7 @@ class IndividualOutcome(BaseModel):
 
 class PlayerActionOutcomes(BaseModel):
     character_outcomes: dict[str, IndividualOutcome] = Field(
-        ...,
+        default_factory=dict, # This prevents the crash
         description="A map of character names to their specific situational consequences."
     )
 
