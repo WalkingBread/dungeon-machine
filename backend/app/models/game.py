@@ -16,5 +16,8 @@ class JoinGameResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     player_id: UUID = Field(validation_alias="id")
 
+class LeaveGameRequest(BaseModel):
+    player_id: UUID
+
 class StartGameRequest(BaseModel):
     game_theme: str

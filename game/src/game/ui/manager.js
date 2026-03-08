@@ -24,6 +24,14 @@ export class UiManager {
         return parseInt(this.uiLayer.style.height);
     }
 
+    getCenterX() {
+        return this.getWidth() / 2;
+    }
+
+    getCenterY() {
+        return this.getHeight() / 2;
+    }
+
     clear() {
         this.uiLayer.innerHTML = '';
         this.elements = [];

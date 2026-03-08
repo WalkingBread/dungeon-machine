@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from logic.game.session import SessionManager
 from services.game import GameService, SessionNotFoundError, SessionFullError, PlayersNotReadyError, PlayerNotFoundError
 from models.character import CreateCharacterResponse, CreateCharacterRequest
-from models.game import CreateGameResponse, JoinGameRequest, JoinGameResponse, StartGameRequest, GetGameResponse
+from models.game import CreateGameResponse, JoinGameRequest, JoinGameResponse, StartGameRequest, GetGameResponse, LeaveGameRequest
+
 from uuid import UUID
 
 GLOBAL_SESSION_MANAGER = SessionManager()
@@ -58,6 +59,17 @@ def join_game(session_id: UUID, data: JoinGameRequest,
         raise HTTPException(status_code=400, detail=str(e))
     
     return player
+
+
+@app.post('/session/{session_id}/leave')
+def leave_game(session_id: UUID, data: LeaveGameRequest, 
+               service: GameService = Depends(get_game_service)):
+    try:
+        service.leave_game(session_id, data.player_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    return {'message': 'Player left.'}
 
 
 @app.post('/session/{session_id}/start-game')

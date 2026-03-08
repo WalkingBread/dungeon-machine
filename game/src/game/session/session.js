@@ -22,6 +22,12 @@ class GameSession {
 
         return new Player(playerData.player_id);
     }
+
+    async leave(player) {
+        const ENDPOINT = `${BASE_URL}/session/${this.id}/leave`;
+
+        await request(ENDPOINT, 'POST', { player_id: player.id });
+    }
 }
 
 export async function createSession() {

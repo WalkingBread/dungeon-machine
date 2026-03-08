@@ -73,6 +73,11 @@ class GameService:
             raise InvalidUsernameError(username)
         
         return session.join(username)
+    
+    @validate_session
+    @validate_player
+    def leave_game(self, session: GameSession, player: Player):
+        session.leave(player)
         
     @validate_session
     def start_game(self, session: GameSession, game_theme: str):

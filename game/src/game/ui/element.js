@@ -4,6 +4,9 @@ const BUTTON_TAG = 'button';
 
 const DEFAULT_FONT_SIZE = 30;
 
+const DEFAULT_GAME_BUTTON_WIDTH = 300;
+const DEFAULT_GAME_BUTTON_HEIGHT = 100;
+
 export class UiElement {
     constructor(x, y, width, height, centered = false, tag = DIV_TAG) {
         if(centered) {
@@ -56,5 +59,15 @@ export class Button extends UiElement {
     }
 
     onClick() {}
+}
 
+export class DefaultGameButton extends Button {
+    constructor(text, x, y) {
+        super(
+            text, x, y,
+            DEFAULT_GAME_BUTTON_WIDTH, 
+            DEFAULT_GAME_BUTTON_HEIGHT, 
+            true
+        );
+    }
 }

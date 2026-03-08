@@ -1,5 +1,7 @@
-import { Renderable } from "../renderer/renderable";
-import { State } from "./state";
+import { Renderable } from "../renderer/renderable.js";
+import { DefaultGameButton } from "../ui/element.js";
+import { MenuState } from "./menu.js";
+import { State } from "./state.js";
 
 class SessionIdText extends Renderable {
     constructor(sessionId) {
@@ -20,7 +22,32 @@ export class LobbyState extends State {
     }
 
     enter() {
+    
         this.sessionIdText = new SessionIdText(this.session.id);
+
+        const centerX = this.game.uiManager.getCenterX();
+
+        this.leaveButton = new DefaultGameButton(
+            'Leave',
+            200,
+            this.game.uiManager.getHeight() - 100
+        );
+
+        this.leaveButton.onClick = () => {
+            this.session.leave(this.player);
+            this.game.setState(new MenuState(this.game));
+        };
+
+        this.startGameButton = new DefaultGameButton(
+            'Start game', 
+            centerX, 
+            this.game.uiManager.getHeight() - 100
+        )
+
+        this.game.uiManager.addElements([
+            this.leaveButton,
+            this.startGameButton
+        ]);
     }
 
     render() {

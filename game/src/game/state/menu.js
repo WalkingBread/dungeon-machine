@@ -1,7 +1,7 @@
 import { State } from './state.js'
 import { Renderable, Sprite } from '../renderer/renderable.js'
 import { GameImage } from '../renderer/image.js';
-import { TextInput, Button} from '../ui/element.js'
+import { TextInput, DefaultGameButton} from '../ui/element.js'
 import { CreateGameState } from './creategame.js';
 import { JoinGameState } from './joingame.js';
 
@@ -16,18 +16,6 @@ class Logo extends Sprite {
 class UsernameTextInput extends TextInput {
     constructor(x, y) {
         super(x, y, 400, 70, true);
-    }
-}
-
-class CreateGameButton extends Button {
-    constructor(x, y) {
-        super('Create game', x, y, 300, 100, true);
-    }
-}
-
-class JoinGameButton extends Button {
-    constructor(x, y) {
-        super('Join game', x, y, 300, 100, true);
     }
 }
 
@@ -56,11 +44,11 @@ export class MenuState extends State {
 
         this.usernameText = new UsernameText();
 
-        const centerX = this.game.uiManager.getWidth() / 2;
+        const centerX = this.game.uiManager.getCenterX();
 
         this.usernameInput = new UsernameTextInput(centerX, 470);
-        this.createGameButton = new CreateGameButton(centerX, 650);
-        this.joinGameButton = new JoinGameButton(centerX, 800);
+        this.createGameButton = new DefaultGameButton('Create game', centerX, 650);
+        this.joinGameButton = new DefaultGameButton('Join game', centerX, 800);
 
         this.createGameButton.enabled(false);
         this.joinGameButton.enabled(false);
