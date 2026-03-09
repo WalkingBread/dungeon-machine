@@ -24,6 +24,7 @@ export class JoiningState extends State {
         this.loadingText = new LoadingText();
 
         const player = await this.session.join(this.username);
+        await this.session.joinWs(player);
 
         await wait(1000);
                
