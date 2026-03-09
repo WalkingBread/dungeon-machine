@@ -1,18 +1,35 @@
 import uvicorn
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from logic.game.session import SessionManager
-from services.game import GameService, SessionNotFoundError, SessionFullError, PlayersNotReadyError, PlayerNotFoundError
-from models.character import CreateCharacterResponse, CreateCharacterRequest
-from models.game import CreateGameResponse, JoinGameRequest, JoinGameResponse, StartGameRequest, GetGameResponse, LeaveGameRequest
-
 from uuid import UUID
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
+from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
+from connection.manager import ConnectionManager
+from logic.game.session import SessionManager
+from services.game import (
+    GameService, 
+    SessionNotFoundError, 
+    SessionFullError, 
+    PlayersNotReadyError, 
+    PlayerNotFoundError
+)
+from models.character import CreateCharacterResponse, CreateCharacterRequest
+from models.game import (
+    CreateGameResponse, 
+    JoinGameRequest, 
+    JoinGameResponse, 
+    StartGameRequest, 
+    GetGameResponse,
+    LeaveGameRequest,
+    SessionStateResponse
+)
 
 GLOBAL_SESSION_MANAGER = SessionManager()
 
 def get_game_service():
     return GameService(GLOBAL_SESSION_MANAGER)
+
+CONNECTION_MANAGER = ConnectionManager()
 
 app = FastAPI()
 
@@ -29,49 +46,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: dict[UUID, dict[UUID, WebSocket]] = {}
-
-    async def connect(self, session_id: UUID, player_id: UUID, websocket: WebSocket):
-        await websocket.accept()
-        if session_id not in self.active_connections:
-            self.active_connections[session_id] = {}
-        self.active_connections[session_id][player_id] = websocket
-
-    def disconnect(self, session_id: UUID, player_id: UUID):
-        if session_id in self.active_connections:
-            self.active_connections[session_id].pop(player_id, None)
-        
-            if not self.active_connections[session_id]:
-                del self.active_connections[session_id]
-
-    async def broadcast_to_session(self, session_id: UUID, message: dict):
-        if session_id in self.active_connections:
-            for connection in self.active_connections[session_id].values():
-                await connection.send_json(message)
-
-manager = ConnectionManager()
-
 @app.websocket('/ws/session/{session_id}/{player_id}')
 async def game_session(websocket: WebSocket, session_id: UUID, player_id: UUID,
                        service: GameService = Depends(get_game_service)):
-    await manager.connect(session_id, player_id, websocket)
+    
+    await CONNECTION_MANAGER.connect(session_id, player_id, websocket)
     
     try:
-        current_state = service.get_session(session_id)
-        await websocket.send_json({"data": "state"})
+        session = service.get_session(session_id)
+
+        session_state = SessionStateResponse.from_session(session)
+        await websocket.send_json(jsonable_encoder(session_state))
 
         while True:
             data = await websocket.receive_json()
-
             print(data)
         
 
     except WebSocketDisconnect:
-        manager.disconnect(session_id, player_id)
-        await manager.broadcast_to_session(session_id, {"type": "PLAYER_LEFT"})
+        CONNECTION_MANAGER.disconnect(session_id, player_id)
+        await CONNECTION_MANAGER.session_broadcast(session_id, {"type": "PLAYER_LEFT"})
     except Exception as e:
         await websocket.send_json({"type": "ERROR", "message": str(e)})
 

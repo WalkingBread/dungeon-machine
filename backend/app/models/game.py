@@ -1,4 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
+from models.character import CharacterSchema
+from typing import Optional
 from uuid import UUID
 
 class CreateGameResponse(BaseModel):
@@ -21,3 +23,32 @@ class LeaveGameRequest(BaseModel):
 
 class StartGameRequest(BaseModel):
     game_theme: str
+
+class PlayerSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    username: str
+    status: str
+    character: Optional[CharacterSchema] = None
+
+class SessionStateResponse(BaseModel):
+    session_id: UUID
+    players: list[PlayerSchema]
+
+    @classmethod
+    def from_session(cls, session):
+        players_data = []
+        
+        for p_id, player in session._players.items():
+            char = session._player_characters.get(p_id)
+            
+            players_data.append(PlayerSchema(
+                username=player.username,
+                status=player.status.value,
+                character=CharacterSchema.model_validate(char) if char else None
+            ))
+
+        return cls(
+            session_id=session.id,
+            players=players_data
+        )

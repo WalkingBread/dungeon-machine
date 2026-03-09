@@ -21,9 +21,9 @@ class GameSession {
         const HTTP_ENDPOINT = `${HTTP_BASE_URL}/session/${this.id}/join`;
         const playerData = await request(HTTP_ENDPOINT, 'POST', { username : username });
 
-        const WS_ENDPOINT = `${WS_BASE_URL}/session/${this.id}/${player.id}`;
+        const WS_ENDPOINT = `${WS_BASE_URL}/session/${this.id}/${playerData.player_id}`;
         this.socket = await connectToWebSocket(WS_ENDPOINT, event => {
-
+            console.log(JSON.parse(event.data));
         });
 
         return new Player(playerData.player_id);
