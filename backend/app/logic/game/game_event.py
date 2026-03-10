@@ -13,18 +13,9 @@ class GameEvent(ABC):
 class DiceEvent(GameEvent):
     statistic: StatType | None # none means no statistic
     player_name: str
-    action: str
-    outcome: TestRollOutcome | None
 
     def to_description(self) -> str:
-        descriptions = {
-            TestRollOutcome.EXTREME_SUCCESS: f"{self.player_name} tried to {self.action} and succeeded brilliantly!",
-            TestRollOutcome.SUCCESS: f"{self.player_name} tried to {self.action} and succeeded.",
-            TestRollOutcome.FAILURE: f"{self.player_name} tried to {self.action} but failed.",
-            TestRollOutcome.EXTREME_FAILURE: f"{self.player_name} tried to {self.action} but he failed miserably!"
-        }
-
-        return descriptions.get(self.outcome, f"{self.player_name} is rolling the dice...")
+        pass
 
 
 @dataclass

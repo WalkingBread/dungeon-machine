@@ -114,9 +114,10 @@ class PlayerAction:
     @require_state(PlayerActionState.REQUIRES_DESCRIPTION)
     @check_action_text(null=False)
     @require_no_active_roll
-    def add_new_dice_roll(self, statistic: StatType | None):
+    def add_new_dice_roll(self, statistic: StatType | None, attempt_desc: str | None = None):
         self.state = PlayerActionState.REQUIRES_PLAYER_DICE_ROLL
-        new_dice_roll = DiceRollAction(self.player_name, statistic)
+        new_dice_roll = DiceRollAction(statistic, attempt_desc)
+        new_dice_roll.attempt_description = attempt_desc
         self.dice_rolls.append(new_dice_roll)
 
     @require_state(PlayerActionState.REQUIRES_PLAYER_DICE_ROLL)
@@ -144,8 +145,8 @@ class PlayerAction:
 
 @dataclass
 class DiceRollAction:
-    player_name: str
     statistic: StatType | None = None
+    attempt_description: str | None = None
     state: DiceRollActionState = DiceRollActionState.REQUIRES_PLAYER
     dice_result: TestRollOutcome | None = None
     result_description: str | None = None # what happens after the dice is rolled :)

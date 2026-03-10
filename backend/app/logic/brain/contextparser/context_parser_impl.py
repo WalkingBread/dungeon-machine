@@ -1,9 +1,39 @@
+import json
+from functools import wraps
+
 from logic.brain.contextparser.context_parser import ContextParser
 from logic.character.stat import Statistics
 from logic.game.character import GameCharacter
 from logic.game.game import GameState
-from logic.game.player_action import PlayerAction, DiceRollActionState
+from logic.game.player_action import PlayerAction, DiceRollActionState, ActionVerificationException
 from logic.game.scene import Scene
+
+
+def require_player_context(func):
+    """
+    Decorator to ensure the PlayerAction object has a valid name and intent
+    before proceeding with parsing for the LLM.
+    """
+
+    @wraps(func)
+    def wrapper(self, action: 'PlayerAction', *args, **kwargs):
+
+        if not action.player_name or not action.player_name.strip():
+            raise ActionVerificationException("Player name is required for narrative context.")
+
+        if not action.player_action or not action.player_action.strip():
+            raise ActionVerificationException(
+                f"Player '{action.player_name}' provided no action text."
+            )
+
+        if len(action.player_action.strip()) < 3:
+            raise ActionVerificationException(
+                f"Action '{action.player_action}' is too short for the engine to process."
+            )
+
+        return func(self, action, *args, **kwargs)
+
+    return wrapper
 
 
 class ContextParserImpl(ContextParser):
@@ -15,77 +45,34 @@ class ContextParserImpl(ContextParser):
         last_scene = story[-1] if story else Scene()
 
         return {
-            "players": [self._character_to_dict(c) for c in game_state.player_characters],
-            "game_characters": [self._character_to_dict(c) for c in game_state.npc_characters],
+            "players": [self.parse_character_to_json(c) for c in game_state.player_characters],
+            "game_characters": [self.parse_character_to_json(c) for c in game_state.npc_characters],
             "previous_scene_content": last_scene.get_scene_content(),
         }
 
-    def parse_to_player_action_outcome_context(self, story: list[Scene], player_actions: list[PlayerAction],
-                                               game_state: GameState) -> dict:
+    def parse_to_player_action_context(
+            self,
+            story: list[Scene],
+            player_action: PlayerAction,
+            game_state: GameState
+    ) -> dict:
         """
-        Prepares data specifically for the LLM to decide on dice rolls and
-        consequences based on the player's last move.
+        Orchestrates all parsing logic to create the payload for the
+        LLM action chains (DECIDER, ROLL_SETTER, etc.).
         """
-        current_scene = story[-1] if story else Scene()
+        scene_content = story[-1].get_scene_content() if story else "A new beginning."
+
+        serialized_game_state = self.parse_game_state(game_state)
+
+        intent_context = self.parse_player_intent(player_action)
+        history_context = self.parse_action_history(player_action)
 
         return {
-            "player characters": [self._character_to_dict(c) for c in game_state.player_characters],
-            "player actions": [self._serialize_player_action(a) for a in player_actions],
-            "npc characters": [self._character_to_dict(c) for c in game_state.npc_characters],
-            "current scene content": current_scene.get_scene_content(),
+            "scene": scene_content,
+            "game_state": serialized_game_state,
+            "intent": intent_context,
+            "action_history": history_context
         }
-
-    def _serialize_player_action(self, action: PlayerAction) -> dict:
-        """
-        Serializes the action with a focus on the 'Unresolved' elements
-        to prompt the LLM for the next logic step.
-        """
-        completed_rolls = [
-            {
-                "stat": r.statistic.name if r.statistic else "General",
-                "result": r.dice_result.name if r.dice_result else "Unknown",
-                "description": r.result_description
-            }
-            for r in action.dice_rolls if r.state == DiceRollActionState.FINISHED
-        ]
-
-        active_roll = None
-        if action.dice_rolls and action.dice_rolls[-1].state != DiceRollActionState.FINISHED:
-            last = action.dice_rolls[-1]
-            active_roll = {
-                "stat": last.statistic.name if last.statistic else "General",
-                "result": last.dice_result.name if last.dice_result else "Waiting for roll...",
-                "current_roll_state": last.state.name
-            }
-
-        return {
-            "player": action.player_name,
-            "overall_state": action.state.name,
-            "player_intent": action.player_action,
-            "completed_steps": completed_rolls,
-            "active_event": active_roll,
-        }
-
-    def _character_to_dict(self, character: GameCharacter) -> dict:
-        if not character:
-            return {}
-
-        char_data = {
-            "name": getattr(character, 'name', "Unknown"),
-            "health": f"{getattr(character, 'health', 0)}/{getattr(character, 'max_health', 0)}",
-        }
-
-        money = getattr(character, 'money', 0)
-        if money:
-            char_data["money"] = money
-
-        stats = getattr(character, 'stats', None)
-        if stats:
-            serialized_stats = self._serialize_statistics(stats)
-            if serialized_stats:
-                char_data["stats"] = serialized_stats
-
-        return char_data
 
     def _serialize_statistics(self, statistics: Statistics) -> dict:
         if not statistics or not hasattr(statistics, 'stats'):
@@ -95,3 +82,74 @@ class ContextParserImpl(ContextParser):
             stat_type.name: stat_obj._value
             for stat_type, stat_obj in statistics.stats.items()
         }
+
+    def parse_character_to_json(self, character: GameCharacter) -> str:
+        """
+        Serializes a single GameCharacter into a JSON string for LLM consumption.
+        Reuses existing serialization logic for consistency.
+        """
+        stats_data = self._serialize_statistics(character.stats)
+
+        character_map = {
+            "name": getattr(character, 'name', "Unknown"),
+            "health": f"{getattr(character, 'health', 0)}/{getattr(character, 'max_health', 0)}",
+            "statistics": stats_data
+        }
+
+        compact_json = json.dumps(character_map, indent=None, separators=(',', ':'))
+
+        return compact_json + "\n"
+
+    def parse_game_state(self, game_state: GameState) -> str:
+        """
+        Serializes a GameState into a categorized Markdown + JSONL string.
+        """
+        output = []
+
+        output.append("#### PLAYER_CHARACTERS")
+        if not game_state.player_characters:
+            output.append("None")
+        else:
+            for pc in game_state.player_characters:
+                output.append(self.parse_character_to_json(pc).strip())
+        output.append("")
+
+        output.append("#### GAME_CHARACTERS")
+        if not game_state.npc_characters:
+            output.append("None")
+        else:
+            for npc in game_state.npc_characters:
+                output.append(self.parse_character_to_json(npc).strip())
+
+        return "\n".join(output) + "\n"
+
+    @require_player_context
+    def parse_action_history(self, action: PlayerAction) -> str:
+        history_lines = []
+
+        for i, roll in enumerate(action.dice_rolls, 1):
+            stat_name = roll.statistic.name if roll.statistic else "NO_STATISTIC"
+
+            line_parts = [f"ROLL {i} ({stat_name})"]
+
+            if roll.attempt_description:
+                line_parts.append(f"- Attempt: {roll.attempt_description}")
+
+            if roll.dice_result:
+                line_parts.append(f"| Result: {roll.dice_result.name}")
+
+            if roll.result_description:
+                line_parts.append(f"| Outcome: {roll.result_description}")
+
+            history_lines.append(" ".join(line_parts))
+
+        if action.result_description:
+            history_lines.append(f"FINAL SUMMARY: {action.result_description}")
+
+        return "\n".join(history_lines)
+
+    @require_player_context
+    def parse_player_intent(self, action: PlayerAction) -> str:
+        clean_intent = action.player_action.strip()
+
+        return f"Player {action.player_name.strip()} wants to: {clean_intent}"

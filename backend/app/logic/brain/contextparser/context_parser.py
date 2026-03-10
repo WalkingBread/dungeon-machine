@@ -11,6 +11,13 @@ class ContextParser(ABC):
         pass
 
     @abstractmethod
-    def parse_to_player_action_outcome_context(self, story: list[Scene], player_actions: list[PlayerAction],
-                                               game_state: GameState) -> dict:
-        pass
+    def parse_to_player_action_context(
+            self,
+            story: list[Scene],
+            player_action: PlayerAction,
+            game_state: GameState
+    ) -> dict:
+        """
+        Orchestrates all parsing logic to create the payload for the
+        LLM action chains (DECIDER, ROLL_SETTER, etc.).
+        """

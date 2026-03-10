@@ -1,3 +1,5 @@
+import logging
+
 from logic.brain.game_master_brain import GameMasterBrain
 from logic.brain.player_action_outcome import PlayerActionOutcome
 from logic.game.character import PlayerCharacter
@@ -14,7 +16,8 @@ class GameMaster:
         self._game: Game = None
         self._story: list[Scene] = []
         self._brain = GameMasterBrain()
-        self._player_actions: dict[str, PlayerAction] = {}
+        # The single source of truth for the current turn
+        self._active_action: PlayerAction | None = None
 
     @property
     def game(self):
@@ -35,117 +38,83 @@ class GameMaster:
         self._begin_new_scene()
         self.current_scene.add(self._brain.get_game_introduction())
 
-    def start_next_scene(self) -> list[PlayerInputRequest]:
-        scene_description_sequence, events = (
-            self._brain.provide_scene_setting(self._story, self._game.capture_game_state()))
-        self._begin_new_scene()
-        self.current_scene.add(scene_description_sequence)
-
-        engine_event_sequences = self._game.execute_events(events)
-        self.current_scene.extend(engine_event_sequences)
-
-        # we create player actions and send request to the player to fill in what they want to do
-        input_requests: list[PlayerInputRequest] = []
-        for player_char in self._game.player_characters:
-            self._player_actions[player_char.name] = PlayerAction(player_char.name)
-            input_requests.append(PlayerInputRequest(player_char.name, "what do you do?"))
-
-        return input_requests
-
     def _begin_new_scene(self):
         """
         helper function for start_next_scene
         """
         self._story.append(Scene())
 
-    def handle_new_actions(self, inputs: list[PlayerInputResponse]) \
-            -> list[PlayerDiceRollRequest] | None:
-
-        for response in inputs:
-            self._player_actions[response.player_name].add_player_action(response.player_action)
-
-        actions = list(self._player_actions.values())
-        outcomes = self._brain.provide_player_actions_outcome(self._story,
-                                                            actions, self._game.capture_game_state())
-
-        dice_requests: list[PlayerDiceRollRequest] = []
-
-        for outcome in outcomes:
-            dice_event = self._handle_player_action_outcome(outcome)
-            if dice_event:
-                dice_requests.append(self._build_player_dice_request(dice_event))
-
-        if dice_requests:
-            return dice_requests
-        else:
-            return None
-
-    def handle_player_dice_results(self, dice_rolls: list[PlayerDiceRollResponse]) \
-            -> list[PlayerDiceRollRequest] | None:
-        for dice_roll in dice_rolls:
-            self.add_player_dice_roll_result(dice_roll)
-
-        # now that we updated all the actions we have to get the description for the outcomes
-        pending_actions = [
-            action for action in self._player_actions.values()
-            if not action.is_finished
-        ]
-        outcomes = self._brain.provide_player_actions_outcome(self._story,
-                                                   pending_actions, self._game.capture_game_state())
-
-        dice_requests: list[PlayerDiceRollRequest] = []
-
-        for outcome in outcomes:
-            dice_event = self._handle_player_action_outcome(outcome)
-            if dice_event:
-                dice_requests.append(self._build_player_dice_request(dice_event))
-
-        if dice_requests:
-            return dice_requests
-        else:
-            return None
-
-    def add_player_dice_roll_result(self, dice_roll: PlayerDiceRollResponse):
-        player = dice_roll.player_name
-        dice_result = dice_roll.dice_result
-        self._player_actions[player].add_result_to_dice_roll(dice_result)
-
-    def _handle_player_action_outcome(self, outcome: PlayerActionOutcome) \
-            -> DiceEvent | None:
-        """ Probably the biggest heavy lifter right now, what it does:
-            - handles the LLM returned object of PlayerActionOutcome
-            - adds description to the user actions and their dice rolls
-            - updates the state of player's action (adding dice rolls, resolving actions)
-            - if players action is finished it adds its description as a sequence to the
-                current scene
-            - passes the engine events to the game engine to execute them and appends
-                the sequences of those events to the current scene
-            - returns the events which are "dice events" so that the orchestrator
-                can handle them further
+    def start_next_scene(self) -> PlayerInputRequest:
         """
-        player = outcome.player_name
-        action = self._player_actions[player]
+        Begins a new scene, executes initial events, and asks the player for intent.
+        """
+        state = self._game.capture_game_state()
+        scene_setting, events = self._brain.provide_scene_setting(self._story, state)
 
-        if action.last_dice_roll:
-            action.add_roll_description(outcome.outcome_description)
+        # 1. Initialize Scene
+        self._story.append(Scene())
+        self.current_scene.add(scene_setting)
 
-        if outcome.is_final_outcome:
-            action.add_final_description(outcome.outcome_description)
-            self.current_scene.add(PlayerActionSequence(player_name=outcome.player_name,
-                                                        content=outcome.outcome_description))
-            engine_sequences = self._game.execute_events(outcome.game_events)
-            self.current_scene.extend(engine_sequences)
+        # 2. Execute Environmental/NPC events
+        engine_sequences = self._game.execute_events(events)
+        self.current_scene.extend(engine_sequences)
 
+        # 3. Setup the turn-level Action object
+        player_char = self._game.player_characters[0]
+        self._active_action = PlayerAction(player_char.name)
+
+        return PlayerInputRequest(player_char.name, "What do you do?")
+
+    def handle_player_input(self, response: PlayerInputResponse) -> PlayerDiceRollRequest | None:
+        """
+        Entry point for text intent.
+        """
+        self._active_action.add_player_action(response.player_action)
+        return self._orchestrate_turn()
+
+    def handle_dice_result(self, result: PlayerDiceRollResponse) -> PlayerDiceRollRequest | None:
+        """
+        Entry point for dice results.
+        """
+        self._active_action.add_result_to_dice_roll(result.dice_result)
+        return self._orchestrate_turn()
+
+    def _orchestrate_turn(self) -> PlayerDiceRollRequest | None:
+        """
+        The core loop: Passes state to the brain and reacts to the returned events.
+        """
+        # Brain processes: Outcome Description -> Decider -> (Roll or Finalize)
+        events = self._brain.process_player_action_outcome(
+            self._story,
+            self._active_action,
+            self._game.capture_game_state()
+        )
+
+        # 1. Handle Dice Requests
+        dice_event = next((e for e in events if isinstance(e, DiceEvent)), None)
+        if dice_event:
+            return PlayerDiceRollRequest(dice_event.player_name, dice_event.statistic)
+
+        # 2. Handle Finalization
+        if self._active_action.is_finished:
+            self._record_final_narrative()
             return None
-        else:
-            dice_event = next((e for e in outcome.game_events if isinstance(e, DiceEvent)), None)
-            engine_events = [e for e in outcome.game_events if not isinstance(e, DiceEvent)]
-            action.add_new_dice_roll(dice_event.statistic)
 
-            engine_sequences = self._game.execute_events(engine_events)
-            self.current_scene.extend(engine_sequences)
+        return None
 
-            return dice_event
+    def _record_final_narrative(self):
+        """Logs and appends the final result to the scene."""
+        summary = self._active_action.result_description
 
-    def _build_player_dice_request(self, dice_event: DiceEvent) -> PlayerDiceRollRequest:
-        return PlayerDiceRollRequest(dice_event.player_name, dice_event.statistic)
+        # Add to story structure
+        self.current_scene.add(PlayerActionSequence(
+            player_name=self._active_action.player_name,
+            content=summary
+        ))
+
+        # Output the turn summary to logs
+        logging.info("--- TURN RESOLVED ---")
+        logging.info(f"ACTION: {self._active_action.player_action}")
+        logging.info(f"RESULT: {summary}")
+        logging.info(f"SCENE TOTAL LINES: {len(self.current_scene.scene_sequences)}")
+        logging.info("---------------------")

@@ -12,7 +12,7 @@ class ResponseParser:
             -> tuple[SceneDescriptionSequence, list[GameEvent]]:
 
         sequence = SceneDescriptionSequence(content=story_update.new_story_segment)
-        events = self._map_to_game_events(story_update.engine_events)
+        events = self.map_to_game_events(story_update.engine_events)
 
         return sequence, events
 
@@ -22,7 +22,7 @@ class ResponseParser:
         results = []
 
         for char_name, outcome in action_outcomes.character_outcomes.items():
-            game_events = self._map_to_game_events(outcome.rolls)
+            game_events = self.map_to_game_events(outcome.rolls)
 
             results.append(
                 PlayerActionOutcome(
@@ -34,7 +34,7 @@ class ResponseParser:
 
         return results
 
-    def _map_to_game_events(self, llm_events) -> list[GameEvent]:
+    def map_to_game_events(self, llm_events) -> list[GameEvent]:
         game_events = []
         for event in llm_events:
             match event:
@@ -48,15 +48,14 @@ class ResponseParser:
                     game_events.append(RemoveCharacterEvent(character_name=name))
 
                 case DiceRoll(character_name=name, statistic=stat):
-                    engine_stat = self._map_stat_type(stat)
+                    engine_stat = self.map_stat_type(stat)
                     game_events.append(DiceEvent(player_name=name, statistic=engine_stat))
-
                 case _:
                     raise ValueError(f"Unknown event type: {type(event)}")
 
         return game_events
 
-    def _map_stat_type(self, llm_stat: StatisticType) -> StatType | None:
+    def map_stat_type(self, llm_stat: StatisticType) -> StatType | None:
         if llm_stat == StatisticType.NO_STATISTIC:
             return None
 
