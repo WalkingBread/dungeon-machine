@@ -2,6 +2,7 @@ from logic.game import GameMaster
 from logic.game.character import PlayerCharacter
 from enum import Enum
 from uuid import uuid4, UUID
+from secrets import token_urlsafe
 
 class PlayerNotJoinedError(Exception):
     def __init__(self, player: Player):
@@ -20,22 +21,27 @@ class PlayerStatus(Enum):
     READY = 'Ready.'
 
 class Player:
-    def __init__(self, id: UUID, username: str):
-        self._id = id
+    def __init__(self, username: str):
+        self._id = uuid4()
+        self._auth_token = token_urlsafe(32)
         self.username = username
         self.status = PlayerStatus.CREATING_CHARACTER
 
     @property
     def id(self):
         return self._id
+    
+    @property
+    def auth_token(self):
+        return self._auth_token
 
     @property
     def ready(self):
         return self.status is PlayerStatus.READY
 
 class GameSession:
-    def __init__(self, id: UUID):
-        self._id = id
+    def __init__(self):
+        self._id = uuid4()
         self._game_master = GameMaster()
         self._players: dict[UUID, Player] = {}
         self._player_characters: dict[UUID, PlayerCharacter] = {}
@@ -79,9 +85,8 @@ class GameSession:
         return character
 
     def join(self, username) -> Player:
-        player_id = uuid4()
-        player = Player(player_id, username)
-        self._players[player_id] = player
+        player = Player(username)
+        self._players[player.id] = player
         return player
     
     def leave(self, player: Player):
@@ -91,7 +96,6 @@ class GameSession:
 
         self._player_characters.pop(player.id, None)
 
-        
     def start_game(self, game_theme):
         if not self.game_started and self.players_ready:
             self.game_master.create_game(
@@ -101,14 +105,14 @@ class GameSession:
             return True
         return False
     
+
 class SessionManager:
     def __init__(self):
         self._sessions: dict[UUID, GameSession] = {}
 
     def create_session(self) -> GameSession:
-        session_id = uuid4()
-        session = GameSession(session_id)
-        self._sessions[session_id] = session
+        session = GameSession()
+        self._sessions[session.id] = session
         return session
     
     def get_session(self, id: UUID):

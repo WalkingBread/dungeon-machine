@@ -4,10 +4,10 @@ from uuid import UUID
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from connection.manager import ConnectionManager
+from connection.manager import ConnectionManager, MessageType
 from logic.game.session import SessionManager
-from services.game import (
-    GameService, 
+from services.game import GameService
+from services.game.error import (
     SessionNotFoundError, 
     SessionFullError, 
     PlayersNotReadyError, 
@@ -53,8 +53,18 @@ async def game_session(websocket: WebSocket, session_id: UUID, player_id: UUID,
     await CONNECTION_MANAGER.connect(session_id, player_id, websocket)
     
     try:
-        session = service.get_session(session_id)
+        auth_data = await websocket.receive_json()
+        type = MessageType(auth_data.get('type'))
 
+        if type != MessageType.AUTHENTICATE:
+            await websocket.close(code=1008)
+            return
+        
+        auth_token = auth_data.get('auth_token')
+        player = service.auth_player(session_id, player_id, auth_token)
+        await websocket.send_json({"message": f"Player {player.username} authenticated successfully."})
+
+        session = service.get_session(session_id)
         session_state = SessionStateResponse.from_session(session)
         await websocket.send_json(jsonable_encoder(session_state))
 
@@ -66,6 +76,7 @@ async def game_session(websocket: WebSocket, session_id: UUID, player_id: UUID,
     except WebSocketDisconnect:
         CONNECTION_MANAGER.disconnect(session_id, player_id)
         await CONNECTION_MANAGER.session_broadcast(session_id, {"type": "PLAYER_LEFT"})
+
     except Exception as e:
         await websocket.send_json({"type": "ERROR", "message": str(e)})
 
@@ -105,7 +116,7 @@ def join_game(session_id: UUID, data: JoinGameRequest,
 def leave_game(session_id: UUID, data: LeaveGameRequest, 
                service: GameService = Depends(get_game_service)):
     try:
-        service.leave_game(session_id, data.player_id)
+        service.leave_game(session_id, data.player_id, data.auth_token)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
@@ -131,7 +142,7 @@ def start_game(session_id: UUID, data: StartGameRequest,
 def create_character(session_id: UUID, data: CreateCharacterRequest,
                      service: GameService = Depends(get_game_service)):
     try:
-        character = service.create_character(session_id, data.player_id, data.name)
+        character = service.create_character(session_id, data.player_id, data.auth_token, data.name)
 
     except SessionNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

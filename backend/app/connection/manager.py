@@ -1,5 +1,15 @@
 from uuid import UUID
 from fastapi import WebSocket
+from enum import Enum, auto
+
+class MessageType(Enum):    
+    def _generate_next_value_(name, _start, _count, _last_values):
+        return name.upper()
+    
+    PLAYER_JOINED = auto()
+    CHARACTER_CREATED = auto()
+    GAME_STARTED = auto()
+    AUTHENTICATE = auto()
 
 class ConnectionManager:
     def __init__(self):

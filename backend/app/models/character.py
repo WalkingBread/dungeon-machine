@@ -3,6 +3,7 @@ from uuid import UUID
 
 class CreateCharacterRequest(BaseModel):
     player_id: UUID
+    auth_token: str
     name: str
 
 class CharacterSchema(BaseModel):

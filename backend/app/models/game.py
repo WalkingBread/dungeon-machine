@@ -17,9 +17,11 @@ class JoinGameRequest(BaseModel):
 class JoinGameResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     player_id: UUID = Field(validation_alias="id")
+    auth_token: str = Field(validation_alias="auth_token")
 
 class LeaveGameRequest(BaseModel):
     player_id: UUID
+    auth_token: str
 
 class StartGameRequest(BaseModel):
     game_theme: str
@@ -27,6 +29,7 @@ class StartGameRequest(BaseModel):
 class PlayerSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
+    player_id: UUID
     username: str
     status: str
     character: Optional[CharacterSchema] = None
@@ -43,12 +46,10 @@ class SessionStateResponse(BaseModel):
             char = session._player_characters.get(p_id)
             
             players_data.append(PlayerSchema(
+                player_id=player.id,
                 username=player.username,
                 status=player.status.value,
                 character=CharacterSchema.model_validate(char) if char else None
             ))
 
-        return cls(
-            session_id=session.id,
-            players=players_data
-        )
+        return cls(session_id=session.id, players=players_data)
