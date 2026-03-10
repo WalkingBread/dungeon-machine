@@ -20,13 +20,14 @@ export async function request(url, method, body = null) {
     return await response.json();
 }
 
-export async function connectToWebSocket(url, onmessage) {
+export async function connectToWebSocket(url, onopen, onmessage) {
     let socket = null;
 
     return new Promise((resolve, reject) => {
         socket = new WebSocket(url);
 
         socket.onopen = () => {
+            onopen(socket);
             resolve(socket);
         };
 
@@ -34,6 +35,6 @@ export async function connectToWebSocket(url, onmessage) {
             reject(err);
         };
 
-        socket.onmessage = event => { onmessage(event )};
+        socket.onmessage = event => { onmessage(socket, event)};
     });
 }
