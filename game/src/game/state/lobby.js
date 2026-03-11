@@ -14,16 +14,39 @@ class SessionIdText extends Renderable {
     }
 }
 
+class PlayersInLobbyDisplay extends Renderable {
+    constructor(session) {
+        super();
+        this.session = session;
+    }
+
+    render(renderer, x, y) {
+        y += 50;
+        renderer.renderText(
+            `${this.session.localPlayer.username}: ${this.session.localPlayer.status}`, 
+            x, y, 50, 'Arial', '#fff'
+        );
+
+        this.session.remotePlayers.forEach(player => {
+            y += 70;
+            renderer.renderText(
+                `${player.username}: ${player.status}`, 
+                x, y, 50, 'Arial', '#fff'
+            );
+        });
+    }
+}
+
 export class LobbyState extends State {
-    constructor(game, session, player) {
+    constructor(game, session) {
         super(game);
         this.session = session;
-        this.player = player;
     }
 
     enter() {
     
         this.sessionIdText = new SessionIdText(this.session.id);
+        this.playersDisplay = new PlayersInLobbyDisplay(this.session);
 
         const centerX = this.game.uiManager.getCenterX();
 
@@ -34,7 +57,7 @@ export class LobbyState extends State {
         );
 
         this.leaveButton.onClick = () => {
-            this.session.leave(this.player);
+            this.session.leave();
             this.game.setState(new MenuState(this.game));
         };
 
@@ -55,5 +78,6 @@ export class LobbyState extends State {
         const centerX = renderer.getCenterX();
 
         this.sessionIdText.render(renderer, centerX, 40);
+        this.playersDisplay.render(renderer, 50, 200)
     }
 }

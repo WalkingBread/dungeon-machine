@@ -6,9 +6,18 @@ const HTTP_BASE_URL = `http://${HOST}:${PORT}`
 const WS_BASE_URL = `ws://${HOST}:${PORT}/ws`
 
 class Player {
-    constructor(sessionId, id, auth_token) {
+    constructor(sessionId, id, username, status, character = null) {
         this.sessionId = sessionId;
         this.id = id;
+        this.username = username;
+        this.status = status;
+        this.character = character;
+    }
+}
+
+class LocalPlayer extends Player {
+    constructor(sessionId, id, username, status, auth_token) {
+        super(sessionId, id, username, status);
         this.auth_token = auth_token;
     }
 
@@ -22,10 +31,37 @@ class Player {
     }
 }
 
+class RemotePlayer extends Player {
+    constructor(sessionId, id, username, status, character) {
+        super(sessionId, id, username, status, character);
+    }
+}
+
 class GameSession {
     constructor(id) {
         this.id = id;
+        this.remotePlayers = [];
+        this.localPlayer = null;
         this.socket = null;
+    }
+
+    #addRemotePlayer(playerData) {
+        this.remotePlayers.push(new RemotePlayer(
+            this.id,
+            playerData.player_id,
+            playerData.username,
+            playerData.status,
+            playerData.character
+        ));
+    }
+
+    #authenticatePlayer(socket, auth_token) {
+        socket.send(JSON.stringify({ 
+            type: "AUTHENTICATE", 
+            data: {
+                auth_token: auth_token
+            }
+        }));
     }
 
     async join(username) {
@@ -35,32 +71,41 @@ class GameSession {
         const WS_ENDPOINT = `${WS_BASE_URL}/session/${this.id}/${playerData.player_id}`;
 
         const webSocketOnOpen = socket => {
-            socket.send(JSON.stringify({ 
-                type: "AUTHENTICATE", 
-                auth_token: playerData.auth_token
-            }));
+            this.#authenticatePlayer(socket, playerData.auth_token);
         };
 
         const webSocketOnMessage = (socket, event) => {
-            const data = JSON.parse(event.data);
-            console.log(data);
+            const message = JSON.parse(event.data);
+            if(message.type === 'SESSION_STATE') {
+                const players = message.data.players;
+                players.forEach(player => {
+                    if(player.player_id === playerData.player_id) {
+                        this.localPlayer = new LocalPlayer(
+                            this.id,
+                            player.player_id, 
+                            player.username,
+                            player.status,
+                            playerData.auth_token,
+                            username
+                        )
+                    } else {
+                        this.#addRemotePlayer(player);
+                    }
+                });
+                console.log(this.remotePlayers);
+                console.log(this.localPlayer);
+            }
         };
 
         this.socket = await connectToWebSocket(WS_ENDPOINT, webSocketOnOpen, webSocketOnMessage); 
-
-        return new Player(
-            this.id, 
-            playerData.player_id, 
-            playerData.auth_token
-        );
     }
 
-    async leave(player) {
+    async leave() {
         const ENDPOINT = `${HTTP_BASE_URL}/session/${this.id}/leave`;
 
         await request(ENDPOINT, 'POST', { 
-            player_id: player.id, 
-            auth_token: player.auth_token
+            player_id: this.localPlayer.id, 
+            auth_token: this.localPlayer.auth_token
         });
 
         this.#closeConnection();

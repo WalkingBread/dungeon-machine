@@ -2,9 +2,17 @@ import uvicorn
 
 from uuid import UUID
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
-from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from connection.manager import ConnectionManager, MessageType
+from connection import Connection
+from connection.manager import ConnectionManager
+from connection.models import (
+    WebSocketMessage,
+    AuthenticateRequest,
+    InfoResponse,
+    SessionStateResponse,
+    ErrorResponse,
+    PlayerLeftResponse
+)
 from logic.game.session import SessionManager
 from services.game import GameService
 from services.game.error import (
@@ -21,8 +29,9 @@ from models.game import (
     StartGameRequest, 
     GetGameResponse,
     LeaveGameRequest,
-    SessionStateResponse
+    SessionStateSchema
 )
+from pydantic import ValidationError
 
 GLOBAL_SESSION_MANAGER = SessionManager()
 
@@ -46,39 +55,61 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class AuthFailedError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+async def handshake_auth(connection: Connection, service: GameService):
+    try:
+        auth_data = await connection.receive_message(AuthenticateRequest)
+
+        player = service.auth_player(
+            connection.session_id, 
+            connection.player_id, 
+            auth_data.data.auth_token
+        )
+
+        await connection.send_message(InfoResponse(
+            message=f"Player {player.username} authenticated successfully."
+        ))
+        return player
+    except Exception as e:
+        raise AuthFailedError(str(e))
+
 @app.websocket('/ws/session/{session_id}/{player_id}')
 async def game_session(websocket: WebSocket, session_id: UUID, player_id: UUID,
                        service: GameService = Depends(get_game_service)):
     
-    await CONNECTION_MANAGER.connect(session_id, player_id, websocket)
+    connection = await CONNECTION_MANAGER.connect(session_id, player_id, websocket)
     
     try:
-        auth_data = await websocket.receive_json()
-        type = MessageType(auth_data.get('type'))
-
-        if type != MessageType.AUTHENTICATE:
-            await websocket.close(code=1008)
+        try: 
+            player = await handshake_auth(connection, service)
+        except AuthFailedError as e:
+            await connection.send_message(ErrorResponse(message=str(e)))
+            await connection.close(1008)
+            CONNECTION_MANAGER.disconnect(session_id, player_id)
             return
-        
-        auth_token = auth_data.get('auth_token')
-        player = service.auth_player(session_id, player_id, auth_token)
-        await websocket.send_json({"message": f"Player {player.username} authenticated successfully."})
 
         session = service.get_session(session_id)
-        session_state = SessionStateResponse.from_session(session)
-        await websocket.send_json(jsonable_encoder(session_state))
+        session_state = SessionStateSchema.from_session(session)
+
+        await connection.send_message(SessionStateResponse(data=session_state))
 
         while True:
-            data = await websocket.receive_json()
+            data = await connection.receive_any()
             print(data)
         
 
     except WebSocketDisconnect:
         CONNECTION_MANAGER.disconnect(session_id, player_id)
-        await CONNECTION_MANAGER.session_broadcast(session_id, {"type": "PLAYER_LEFT"})
+        await CONNECTION_MANAGER.session_broadcast(
+            session_id, 
+            PlayerLeftResponse(player_id=player_id)
+        )
 
     except Exception as e:
-        await websocket.send_json({"type": "ERROR", "message": str(e)})
+        await connection.send_message(ErrorResponse(message=str(e)))
 
 @app.get("/")
 def read_root():
