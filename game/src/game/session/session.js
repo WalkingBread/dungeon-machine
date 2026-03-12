@@ -6,7 +6,7 @@ const HTTP_BASE_URL = `http://${HOST}:${PORT}`
 const WS_BASE_URL = `ws://${HOST}:${PORT}/ws`
 
 class Player {
-    constructor(sessionId, id, username, status, character = null) {
+    constructor(sessionId, id, username, status = null, character = null) {
         this.sessionId = sessionId;
         this.id = id;
         this.username = username;
@@ -16,8 +16,8 @@ class Player {
 }
 
 class LocalPlayer extends Player {
-    constructor(sessionId, id, username, status, auth_token) {
-        super(sessionId, id, username, status);
+    constructor(sessionId, id, username, auth_token) {
+        super(sessionId, id, username);
         this.auth_token = auth_token;
     }
 
@@ -64,9 +64,57 @@ class GameSession {
         }));
     }
 
+    #handleSessionState(message) {
+        const players = message.data.players;
+        players.forEach(player => {
+            if(player.player_id === this.localPlayer.id) {
+                this.localPlayer.status = player.status;
+                this.localPlayer.character = player.character;
+            } else {
+                this.#addRemotePlayer(player);
+            }
+        });
+    }
+
+    #handlePlayerLeft(message) {
+        this.remotePlayers = this.remotePlayers.filter(
+            player => player.id !== message.player_id
+        );
+    }
+
+    #handlePlayerJoined(message) {
+        this.#addRemotePlayer(message.player_data);
+    }
+
+    #handleWebSocketMessage(socket, message) {
+        console.log(message)
+        switch(message.type) {
+            case 'SESSION_STATE':
+                this.#handleSessionState(message);
+                break;
+            case 'PLAYER_LEFT':
+                this.#handlePlayerLeft(message);
+                break;
+            case 'PLAYER_JOINED':
+                this.#handlePlayerJoined(message);
+                break;
+            case 'INFO':
+                break;
+            default:
+                console.log(`Unknown message type: ${message.type}.`);
+        }
+    }
+
     async join(username) {
         const HTTP_ENDPOINT = `${HTTP_BASE_URL}/session/${this.id}/join`;
         const playerData = await request(HTTP_ENDPOINT, 'POST', { username : username });
+
+        this.localPlayer = new LocalPlayer(
+            this.id, 
+            playerData.player_id, 
+            username,
+            playerData.auth_token
+        );
 
         const WS_ENDPOINT = `${WS_BASE_URL}/session/${this.id}/${playerData.player_id}`;
 
@@ -76,25 +124,7 @@ class GameSession {
 
         const webSocketOnMessage = (socket, event) => {
             const message = JSON.parse(event.data);
-            if(message.type === 'SESSION_STATE') {
-                const players = message.data.players;
-                players.forEach(player => {
-                    if(player.player_id === playerData.player_id) {
-                        this.localPlayer = new LocalPlayer(
-                            this.id,
-                            player.player_id, 
-                            player.username,
-                            player.status,
-                            playerData.auth_token,
-                            username
-                        )
-                    } else {
-                        this.#addRemotePlayer(player);
-                    }
-                });
-                console.log(this.remotePlayers);
-                console.log(this.localPlayer);
-            }
+            this.#handleWebSocketMessage(socket, message);
         };
 
         this.socket = await connectToWebSocket(WS_ENDPOINT, webSocketOnOpen, webSocketOnMessage); 

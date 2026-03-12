@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from connection.message import MessageType
-from models.game import SessionStateSchema
+from models.game import SessionStateSchema, PlayerSchema
 from typing import Literal, Union, Annotated
 from uuid import UUID
 
@@ -22,6 +22,10 @@ class InfoResponse(BaseModel):
 class ErrorResponse(BaseModel):
     type: Literal[MessageType.ERROR] = MessageType.ERROR
     message: str
+
+class PlayerJoinedResponse(BaseModel):
+    type: Literal[MessageType.PLAYER_JOINED] = MessageType.PLAYER_JOINED
+    player_data: PlayerSchema
 
 class PlayerLeftResponse(BaseModel):
     type: Literal[MessageType.PLAYER_LEFT] = MessageType.PLAYER_LEFT

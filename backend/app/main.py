@@ -11,7 +11,8 @@ from connection.models import (
     InfoResponse,
     SessionStateResponse,
     ErrorResponse,
-    PlayerLeftResponse
+    PlayerLeftResponse,
+    PlayerJoinedResponse
 )
 from logic.game.session import SessionManager
 from services.game import GameService
@@ -29,9 +30,9 @@ from models.game import (
     StartGameRequest, 
     GetGameResponse,
     LeaveGameRequest,
-    SessionStateSchema
+    SessionStateSchema,
+    PlayerSchema
 )
-from pydantic import ValidationError
 
 GLOBAL_SESSION_MANAGER = SessionManager()
 
@@ -90,6 +91,14 @@ async def game_session(websocket: WebSocket, session_id: UUID, player_id: UUID,
             await connection.close(1008)
             CONNECTION_MANAGER.disconnect(session_id, player_id)
             return
+        
+        await CONNECTION_MANAGER.session_broadcast(
+            session_id, 
+            PlayerJoinedResponse(
+                player_data=PlayerSchema.model_validate(player)
+            ),
+            exclude=[connection]
+        )
 
         session = service.get_session(session_id)
         session_state = SessionStateSchema.from_session(session)

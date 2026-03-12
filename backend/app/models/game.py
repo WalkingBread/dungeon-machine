@@ -1,6 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
 from models.character import CharacterSchema
-from connection.message import MessageType
 from typing import Optional
 from uuid import UUID
 
@@ -33,7 +32,7 @@ class StartGameRequest(BaseModel):
 class PlayerSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
-    player_id: UUID
+    player_id: UUID = Field(validation_alias='id')
     username: str
     status: str
     character: Optional[CharacterSchema] = None
@@ -49,11 +48,11 @@ class SessionStateSchema(BaseModel):
         for id, player in session._players.items():
             char = session._player_characters.get(id)
             
-            players_data.append(PlayerSchema(
-                player_id=player.id,
-                username=player.username,
-                status=player.status.value,
-                character=CharacterSchema.model_validate(char) if char else None
-            ))
+            p_schema = PlayerSchema.model_validate(player)
+            
+            if char:
+                p_schema.character = CharacterSchema.model_validate(char)
+
+            players_data.append(p_schema)
 
         return cls(session_id=session.id, players=players_data)

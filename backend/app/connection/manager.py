@@ -24,7 +24,9 @@ class ConnectionManager:
             if not self.active_connections[session_id]:
                 del self.active_connections[session_id]
 
-    async def session_broadcast(self, session_id: UUID, message: WebSocketMessage):
+    async def session_broadcast(self, session_id: UUID, message: WebSocketMessage, exclude: list[Connection] = []):
         if session_id in self.active_connections:
             for connection in self.active_connections[session_id].values():
+                if connection in exclude:
+                    continue
                 await connection.send_message(message)

@@ -24,14 +24,14 @@ class PlayersInLobbyDisplay extends Renderable {
         y += 50;
         renderer.renderText(
             `${this.session.localPlayer.username}: ${this.session.localPlayer.status}`, 
-            x, y, 50, 'Arial', '#fff'
+            x, y, 40, 'Arial', '#fff'
         );
 
         this.session.remotePlayers.forEach(player => {
-            y += 70;
+            y += 60;
             renderer.renderText(
                 `${player.username}: ${player.status}`, 
-                x, y, 50, 'Arial', '#fff'
+                x, y, 40, 'Arial', '#fff'
             );
         });
     }
