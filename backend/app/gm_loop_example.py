@@ -70,7 +70,7 @@ def game_loop_example():
                     step_narrative, dice_request = next(action_generator)
 
         except StopIteration:
-            print("\n--- Action Resolved. Moving to the next scene... Press Ctrl+C to stop---\n")
+            input("\n--- Action Resolved. Press Enter to move to the next scene... Press Ctrl+C to stop---\n")
 
 
 if __name__ == "__main__":
