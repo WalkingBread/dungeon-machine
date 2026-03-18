@@ -10,14 +10,6 @@ class GameEvent(ABC):
         pass
 
 @dataclass
-class DiceEvent(GameEvent):
-    statistic: StatType | None # none means no statistic
-    player_name: str
-
-    def to_description(self) -> str:
-        pass
-
-@dataclass
 class HealthEvent(GameEvent):
     character_name: str
     health_change: int
