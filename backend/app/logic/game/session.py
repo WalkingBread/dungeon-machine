@@ -11,6 +11,10 @@ class CharacterAlreadyCreatedError(Exception):
     def __init__(self, player: Player):
         super().__init__(f'Player {player.username} has already created a character.')
 
+class PlayerNotInGameError(Exception):
+    def __init__(self, player: Player):
+        super().__init__(f'Player {player.username} is not present in the game.')
+
 class PlayerStatus(Enum):
     CREATING_CHARACTER = 'Creating character...'
     READY = 'Ready.'
@@ -79,6 +83,14 @@ class GameSession:
         player = Player(player_id, username)
         self._players[player_id] = player
         return player
+    
+    def leave(self, player: Player):
+        player = self._players.pop(player.id, None)
+        if player is None:
+            raise PlayerNotInGameError(player)
+
+        self._player_characters.pop(player.id, None)
+
         
     def start_game(self, game_theme):
         if not self.game_started and self.players_ready:

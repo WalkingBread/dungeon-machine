@@ -57,6 +57,10 @@ class GameService:
     def create_game(self) -> GameSession:
         return self._session_manager.create_session()
     
+    @validate_session
+    def get_session(self, session: GameSession) -> GameSession:
+        return session
+    
     def _get_session(self, session_id: UUID) -> GameSession:
         return self._session_manager.get_session(session_id)
 
@@ -69,6 +73,11 @@ class GameService:
             raise InvalidUsernameError(username)
         
         return session.join(username)
+    
+    @validate_session
+    @validate_player
+    def leave_game(self, session: GameSession, player: Player):
+        session.leave(player)
         
     @validate_session
     def start_game(self, session: GameSession, game_theme: str):
