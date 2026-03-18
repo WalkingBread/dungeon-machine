@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 from abc import ABC
+from typing import Iterable
+
 
 @dataclass
 class SceneSequence(ABC):
@@ -19,7 +21,7 @@ class GameIntroductionSequence(SceneSequence):
     pass
 
 @dataclass
-class PlayerInputSequence(SceneSequence):
+class PlayerActionSequence(SceneSequence):
     player_name:str
 
     def format_sequence(self) -> str:
@@ -44,9 +46,17 @@ class Scene:
     def add(self, sequence: SceneSequence):
         self.scene_sequences.append(sequence)
 
+    def extend(self, sequences: Iterable[SceneSequence]):
+        """Appends multiple sequences to the scene."""
+        self.scene_sequences.extend(sequences)
+
     def get_scene_content(self) -> str:
         """Joins all sequences into a single formatted string."""
         return "\n".join(seq.format_sequence() for seq in self.scene_sequences)
+
+    def __len__(self):
+        """Returns the number of sequences in the scene."""
+        return len(self.scene_sequences)
 
     def __iter__(self):
         return iter(self.scene_sequences)

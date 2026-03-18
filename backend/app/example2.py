@@ -11,7 +11,7 @@ game_master = session.game_master
 started = session.start_game('medieval')
 if started:
     game_master.introduce_story()
-    game_master.handle_player_action(player_character, 'I try to kill everyone in sight with my bare hands.')
+    game_master.start_next_scene()
     print(game_master.current_scene)
 else:
     print('Not all players are ready.')
