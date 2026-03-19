@@ -24,6 +24,12 @@ class ConnectionManager:
             if not self.active_connections[session_id]:
                 del self.active_connections[session_id]
 
+    def get_connection(self, session_id: UUID, player_id: UUID) -> Connection:
+        session_conns = self.active_connections.get(session_id)
+        if session_conns:
+            return session_conns.get(player_id)
+        return None
+
     async def session_broadcast(self, session_id: UUID, message: WebSocketMessage, exclude: list[Connection] = []):
         if session_id in self.active_connections:
             for connection in self.active_connections[session_id].values():

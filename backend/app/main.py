@@ -12,7 +12,8 @@ from connection.models import (
     SessionStateResponse,
     ErrorResponse,
     PlayerLeftResponse,
-    PlayerJoinedResponse
+    PlayerJoinedResponse,
+    PlayerUpdateResponse
 )
 from logic.game.session import SessionManager
 from services.game import GameService
@@ -22,7 +23,11 @@ from services.game.error import (
     PlayersNotReadyError, 
     PlayerNotFoundError
 )
-from models.character import CreateCharacterResponse, CreateCharacterRequest
+from models.character import (
+    CreateCharacterResponse, 
+    CreateCharacterRequest, 
+    CharacterSchema
+)
 from models.game import (
     CreateGameResponse, 
     JoinGameRequest, 
@@ -179,10 +184,22 @@ def start_game(session_id: UUID, data: StartGameRequest,
 
 
 @app.post('/session/{session_id}/create-character', response_model=CreateCharacterResponse)
-def create_character(session_id: UUID, data: CreateCharacterRequest,
+async def create_character(session_id: UUID, data: CreateCharacterRequest,
                      service: GameService = Depends(get_game_service)):
     try:
-        character = service.create_character(session_id, data.player_id, data.auth_token, data.name)
+        player_id = data.player_id
+
+        character = service.create_character(session_id, player_id, data.auth_token, data.name)
+
+        player_data = PlayerSchema.model_validate(
+            service.get_session(session_id).get_player(player_id)
+        )
+        player_data.character = CharacterSchema.model_validate(character)
+
+        await CONNECTION_MANAGER.session_broadcast(
+            session_id, 
+            PlayerUpdateResponse(player_data=player_data)
+        )
 
     except SessionNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

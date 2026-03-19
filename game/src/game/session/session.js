@@ -1,41 +1,11 @@
+import { PlayerCharacter } from "../character/player.js";
 import { connectToWebSocket, request } from "../utils/api.js";
+import { LocalPlayer, RemotePlayer} from "./player.js"
 
 const HOST = 'localhost';
 const PORT = 8000;
 const HTTP_BASE_URL = `http://${HOST}:${PORT}`
 const WS_BASE_URL = `ws://${HOST}:${PORT}/ws`
-
-class Player {
-    constructor(sessionId, id, username, status = null, character = null) {
-        this.sessionId = sessionId;
-        this.id = id;
-        this.username = username;
-        this.status = status;
-        this.character = character;
-    }
-}
-
-class LocalPlayer extends Player {
-    constructor(sessionId, id, username, auth_token) {
-        super(sessionId, id, username);
-        this.auth_token = auth_token;
-    }
-
-    async createCharacter(name) {
-        const HTTP_ENDPOINT = `${HTTP_BASE_URL}/session/${this.sessionId}/create-character`;
-        const characterData = await request(HTTP_ENDPOINT, 'POST', { 
-            player_id: this.id, 
-            auth_token: this.auth_token, 
-            name: name
-        });
-    }
-}
-
-class RemotePlayer extends Player {
-    constructor(sessionId, id, username, status, character) {
-        super(sessionId, id, username, status, character);
-    }
-}
 
 class GameSession {
     constructor(id) {
@@ -86,6 +56,24 @@ class GameSession {
         this.#addRemotePlayer(message.player_data);
     }
 
+    #handlePlayerUpdate(message) {
+        const playerData = message.player_data;
+        const playerId = playerData.player_id;
+
+        if(this.localPlayer.id === playerId) {
+            this.localPlayer.status = playerData.status;
+            this.localPlayer.character = this.#characterFromData(playerData.character);
+            return;
+        }
+        
+        const player = this.remotePlayers.find(p => p.id === playerId);
+
+        if (player) {
+            player.status = playerData.status;
+            player.character = this.#characterFromData(playerData.character);
+        }
+    }
+
     #handleWebSocketMessage(socket, message) {
         console.log(message)
         switch(message.type) {
@@ -98,11 +86,24 @@ class GameSession {
             case 'PLAYER_JOINED':
                 this.#handlePlayerJoined(message);
                 break;
+            case 'PLAYER_UPDATE':
+                this.#handlePlayerUpdate(message);
+                break;
             case 'INFO':
                 break;
             default:
                 console.log(`Unknown message type: ${message.type}.`);
         }
+    }
+
+    #characterFromData(characterData) {
+        return new PlayerCharacter(
+            characterData.name,
+            characterData.health,
+            characterData.max_health,
+            characterData.money,
+            characterData.stats
+        )
     }
 
     async join(username) {
@@ -139,6 +140,15 @@ class GameSession {
         });
 
         this.#closeConnection();
+    }
+
+    async createCharacter(name) {
+        const HTTP_ENDPOINT = `${HTTP_BASE_URL}/session/${this.id}/create-character`;
+        await request(HTTP_ENDPOINT, 'POST', { 
+            player_id: this.localPlayer.id, 
+            auth_token: this.localPlayer.auth_token, 
+            name: name
+        });
     }
 
     #closeConnection() {

@@ -6,7 +6,7 @@ class MessageType(str, Enum):
     
     PLAYER_JOINED = auto()
     PLAYER_LEFT = auto()
-    CHARACTER_CREATED = auto()
+    PLAYER_UPDATE = auto()
     GAME_STARTED = auto()
     AUTHENTICATE = auto()
     SESSION_STATE = auto()

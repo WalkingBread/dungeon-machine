@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 from connection.message import MessageType
 from models.game import SessionStateSchema, PlayerSchema
+from models.character import CharacterSchema
 from typing import Literal, Union, Annotated
 from uuid import UUID
 
@@ -31,13 +32,19 @@ class PlayerLeftResponse(BaseModel):
     type: Literal[MessageType.PLAYER_LEFT] = MessageType.PLAYER_LEFT
     player_id: UUID
 
+class PlayerUpdateResponse(BaseModel):
+    type: Literal[MessageType.PLAYER_UPDATE] = MessageType.PLAYER_UPDATE
+    player_data: PlayerSchema
+
 WebSocketMessage = Annotated[
     Union[
         AuthenticateRequest, 
         SessionStateResponse,
         InfoResponse,
         ErrorResponse,
-        PlayerLeftResponse
+        PlayerLeftResponse,
+        PlayerJoinedResponse,
+        PlayerUpdateResponse
     ], 
     Field(discriminator='type')
 ]
