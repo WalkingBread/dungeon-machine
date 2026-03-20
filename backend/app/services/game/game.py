@@ -1,28 +1,16 @@
 from logic.game.session import SessionManager, GameSession, Player
+from services.game.error import (
+    SessionNotFoundError, 
+    SessionFullError, 
+    PlayersNotReadyError, 
+    PlayerNotFoundError,
+    PlayerAuthenticationError,
+    InvalidUsernameError
+)
 from uuid import UUID
 from functools import wraps
 
 SESSION_MAX_PLAYER_COUNT = 4
-
-class SessionNotFoundError(Exception):
-    def __init__(self, session_id: UUID):
-        super().__init__(f'Session of id {str(session_id)} was not found.')
-
-class SessionFullError(Exception):
-    def __init__(self, session_id: UUID):
-        super().__init__(f'Session of id {str(session_id)} is full.')
-
-class InvalidUsernameError(Exception):
-    def __init__(self, username: str):
-        super().__init__(f'Username {username} is invalid.')
-
-class PlayerNotFoundError(Exception):
-    def __init__(self, player_id: UUID):
-        super().__init__(f'Player of id {str(player_id)} was not found.')
-
-class PlayersNotReadyError(Exception):
-    def __init__(self):
-        super().__init__('Not all players are ready.')
 
 def _is_valid_username(username: str) -> bool:
     # TO DO
@@ -50,6 +38,16 @@ def validate_player(func):
         return func(self, session, player, *args, **kwargs)
     return wrapper
 
+def authenticate_player(func):
+    @wraps(func)
+    def wrapper(self, session: GameSession, player: Player, 
+                auth_token: str, *args, **kwargs):
+        if auth_token != player.auth_token:
+            raise PlayerAuthenticationError(player.id)
+        
+        return func(self, session, player, *args, **kwargs)
+    return wrapper
+
 class GameService:
     def __init__(self, session_manager: SessionManager):
         self._session_manager = session_manager
@@ -63,6 +61,12 @@ class GameService:
     
     def _get_session(self, session_id: UUID) -> GameSession:
         return self._session_manager.get_session(session_id)
+    
+    @validate_session
+    @validate_player
+    @authenticate_player
+    def auth_player(self, session: GameSession, player: Player):
+        return player
 
     @validate_session
     def join_game(self, session: GameSession, username: str):
@@ -76,6 +80,7 @@ class GameService:
     
     @validate_session
     @validate_player
+    @authenticate_player
     def leave_game(self, session: GameSession, player: Player):
         session.leave(player)
         
@@ -87,5 +92,6 @@ class GameService:
         
     @validate_session
     @validate_player
+    @authenticate_player
     def create_character(self, session: GameSession, player: Player, name: str):
         return session.create_character(player, name)

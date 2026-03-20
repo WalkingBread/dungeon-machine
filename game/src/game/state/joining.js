@@ -23,11 +23,11 @@ export class JoiningState extends State {
     async enter() {
         this.loadingText = new LoadingText();
 
-        const player = await this.session.join(this.username);
+        await this.session.join(this.username);
 
         await wait(1000);
                
-        this.game.setState(new LobbyState(this.game, this.session, player));
+        this.game.setState(new LobbyState(this.game, this.session));
     }
 
     render() {

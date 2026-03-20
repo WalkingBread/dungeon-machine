@@ -16,6 +16,11 @@ export class UiManager {
         });
     }
 
+    removeElement(element) {
+        this.elements.splice(this.elements.indexOf(element), 1);
+        element.element.remove();
+    }
+
     getWidth() {
         return parseInt(this.uiLayer.style.width);
     }

@@ -14,7 +14,7 @@ export class Game {
         this.keyboardHandler = keyboardHandler;
         this.loop = this.#setupLoop(loop_config);
         this.state = null;
-
+        
         this.setState(new MenuState(this));
     }
 
