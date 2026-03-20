@@ -1,4 +1,4 @@
-from logic.game import GameMaster
+from logic.game.game_master import GameMaster
 from logic.game.character import PlayerCharacter
 from enum import Enum
 from uuid import uuid4, UUID

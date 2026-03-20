@@ -1,3 +1,4 @@
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import AzureChatOpenAI
 # from langchain_ollama import ChatOllama
 import os
@@ -46,4 +47,13 @@ def get_gpt_five_mini() -> AzureChatOpenAI:
         temperature=0,
         base_url= api_base_url + GPT_FIVE_MINI_MODEL,
         model=GPT_FIVE_MINI_MODEL,
+    )
+
+def get_gemini() -> ChatGoogleGenerativeAI:
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    return ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
+        google_api_key=api_key,
+        temperature=0,
     )

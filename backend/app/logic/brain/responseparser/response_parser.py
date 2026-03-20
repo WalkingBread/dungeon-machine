@@ -1,29 +1,58 @@
-from logic.brain.modelmanager.request_structures import StoryUpdate, PlayerActionOutcome
-from logic.game.game_event import GameEvent
-from logic.game.scene import SceneDescriptionSequence, ActionDescriptionSequence
+from logic.brain.modelmanager.request_structures import StoryUpdate, AddCharacter, ChangeHealth, \
+    DeleteCharacter, StatisticType, ActionDecision, RollRequirement, RollConsequence, FinalSummary
+from logic.brain.dtos import SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
+from logic.character.stat import StatType
+from logic.game.game_event import GameEvent, HealthEvent, AddCharacterEvent, RemoveCharacterEvent
 
 
 class ResponseParser:
 
-    def parse_to_scene_setting(self, story_update: StoryUpdate) \
-            -> tuple[SceneDescriptionSequence, list[GameEvent]]:
+    def parse_story_update(self, story_update: StoryUpdate) -> SceneIntroductionDto:
+        return SceneIntroductionDto(scene_intro=story_update.new_story_segment,
+                                    game_events=self._map_to_game_events(story_update.engine_events))
 
-        sequence = SceneDescriptionSequence(content=story_update.new_story_segment)
-        events = self._map_to_game_events(story_update.engine_events)
+    def parse_action_decision(self, decision: ActionDecision) -> bool:
+        if decision.decision == "CONTINUE":
+            return True
+        elif decision.decision == "FINISH":
+            return False
+        else:
+            raise ValueError(f"Unknown decision in LLM Response Parser: {decision}")
 
-        return sequence, events
+    def parse_roll_requirement(self, requirement: RollRequirement) -> DiceRollRequestDto:
+        return DiceRollRequestDto(attempt_desc=requirement.intro,
+                                  requested_stat=self._map_stat_type(requirement.statistic))
 
-    def parse_to_player_action_outcome(self, action_outcome: PlayerActionOutcome) \
-            -> tuple[ActionDescriptionSequence, list[GameEvent]]:
+    def parse_roll_consequence(self, consequence: RollConsequence) -> str:
+        return consequence.desc
 
-        sequence = ActionDescriptionSequence(content=action_outcome.description)
-        events = self._map_to_game_events(action_outcome.rolls)
+    def parse_final_summary(self, summary: FinalSummary) -> FinalActionOutcomeDto:
+        return FinalActionOutcomeDto(outcome_desc=summary.final_story,
+                                     game_events=self._map_to_game_events(summary.final_events))
 
-        return sequence, events
 
     def _map_to_game_events(self, llm_events) -> list[GameEvent]:
         game_events = []
-        for llm_event in llm_events:
-            game_events.append(GameEvent(event_str=str(llm_event)))
+        for event in llm_events:
+            match event:
+                case AddCharacter(character_name=name, health_amount=hp):
+                    game_events.append(AddCharacterEvent(character_name=name, health_points=hp))
+
+                case ChangeHealth(character_name=name, health_amount=change):
+                    game_events.append(HealthEvent(character_name=name, health_change=change))
+
+                case DeleteCharacter(character_name=name):
+                    game_events.append(RemoveCharacterEvent(character_name=name))
+                case _:
+                    raise ValueError(f"Unknown event type in LLM Response Parser: {type(event)}")
 
         return game_events
+
+    def _map_stat_type(self, llm_stat: StatisticType) -> StatType | None:
+        if llm_stat == StatisticType.NO_STATISTIC:
+            return None
+
+        try:
+            return StatType[llm_stat.name]
+        except KeyError:
+            return None
