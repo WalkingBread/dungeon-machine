@@ -1,8 +1,8 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Depends
 from uuid import UUID
-from api.connection import Connection
-from api.connection.manager import ConnectionManager
-from api.models.connection import (
+from connection import Connection
+from connection.manager import ConnectionManager
+from models.connection import (
     WebSocketMessage,
     AuthenticateRequest,
     InfoResponse,
@@ -20,12 +20,12 @@ from services.game.error import (
     PlayersNotReadyError, 
     PlayerNotFoundError
 )
-from api.models.character import (
+from models.character import (
     CreateCharacterResponse, 
     CreateCharacterRequest, 
     CharacterSchema
 )
-from api.models.game import (
+from models.game import (
     CreateGameResponse, 
     JoinGameRequest, 
     JoinGameResponse, 
