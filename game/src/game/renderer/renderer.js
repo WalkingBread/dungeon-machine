@@ -32,6 +32,12 @@ export class Renderer {
         }
     }
 
+    drawRect(x, y, width, height, weight = 5, color = WHITE) {
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = weight;
+        this.ctx.strokeRect(x, y, width, height);
+    }
+
     getCenterX() {
         return this.getWindowWidth() / 2;
     }

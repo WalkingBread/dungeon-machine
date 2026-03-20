@@ -29,7 +29,7 @@ class DungeonMachine {
             this.#setupMouseHandler()
         );
 
-        window.addEventListener('contextmenu', (e) => e.preventDefault());
+        //window.addEventListener('contextmenu', (e) => e.preventDefault());
         window.addEventListener('resize', () => this.resizeWindow());
     }
 
