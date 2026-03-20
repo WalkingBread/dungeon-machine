@@ -1,6 +1,6 @@
 from fastapi.websockets import WebSocket
 from fastapi.encoders import jsonable_encoder
-from connection.models import WebSocketMessage
+from api.models.connection import WebSocketMessage
 from pydantic import BaseModel, TypeAdapter
 from uuid import UUID
 

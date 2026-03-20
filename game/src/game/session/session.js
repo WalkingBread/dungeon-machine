@@ -5,7 +5,7 @@ import { LocalPlayer, RemotePlayer} from "./player.js"
 const HOST = 'localhost';
 const PORT = 8000;
 const HTTP_BASE_URL = `http://${HOST}:${PORT}`
-const WS_BASE_URL = `ws://${HOST}:${PORT}/ws`
+const WS_BASE_URL = `ws://${HOST}:${PORT}`
 
 class GameSession {
     constructor(id) {
@@ -117,7 +117,7 @@ class GameSession {
             playerData.auth_token
         );
 
-        const WS_ENDPOINT = `${WS_BASE_URL}/session/${this.id}/${playerData.player_id}`;
+        const WS_ENDPOINT = `${WS_BASE_URL}/session/connect/${this.id}/${playerData.player_id}`;
 
         const webSocketOnOpen = socket => {
             this.#authenticatePlayer(socket, playerData.auth_token);
@@ -158,7 +158,7 @@ class GameSession {
 }
 
 export async function createSession() {
-    const ENDPOINT = `${HTTP_BASE_URL}/create-game`;
+    const ENDPOINT = `${HTTP_BASE_URL}/session/create`;
 
     const sessionData = await request(ENDPOINT, 'POST');
 

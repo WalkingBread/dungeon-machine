@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
-from models.character import CharacterSchema
+from api.models.character import CharacterSchema
 from typing import Optional
 from uuid import UUID
 

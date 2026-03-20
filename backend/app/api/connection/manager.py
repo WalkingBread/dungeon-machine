@@ -1,6 +1,6 @@
 from uuid import UUID
-from connection import Connection
-from connection.models import WebSocketMessage
+from api.connection import Connection
+from api.models.connection import WebSocketMessage
 from fastapi.websockets import WebSocket
 
 class ConnectionManager:

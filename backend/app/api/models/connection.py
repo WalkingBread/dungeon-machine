@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
-from connection.message import MessageType
-from models.game import SessionStateSchema, PlayerSchema
-from models.character import CharacterSchema
+from api.connection.message import MessageType
+from api.models.game import SessionStateSchema, PlayerSchema
+from api.models.character import CharacterSchema
 from typing import Literal, Union, Annotated
 from uuid import UUID
 
