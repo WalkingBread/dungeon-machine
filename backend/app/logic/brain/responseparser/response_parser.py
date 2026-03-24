@@ -1,35 +1,32 @@
-from logic.brain.modelmanager.request_structures import StoryUpdate, AddCharacter, ChangeHealth, \
-    DeleteCharacter, StatisticType, ActionDecision, RollRequirement, RollConsequence, FinalSummary
-from logic.brain.dtos import SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
+
+from logic.brain.modelmanager.request_structures import (
+    StoryUpdate, 
+    AddCharacter, 
+    ChangeHealth,
+    DeleteCharacter,
+    StatisticType, 
+    ActionDecision, 
+    RollRequirement, 
+    RollConsequence, 
+    FinalSummary
+)
+from logic.brain.dtos import (
+    SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
+)
 from logic.character.stat import StatType
-from logic.game.game_event import GameEvent, HealthEvent, AddCharacterEvent, RemoveCharacterEvent
+from logic.game.game_event import (
+    GameEvent, HealthEvent, AddCharacterEvent, RemoveCharacterEvent
+)
 
+T = TypeVar("T")
 
-class ResponseParser:
+class BaseResponseParser(ABC, Generic[T]):
 
-    def parse_story_update(self, story_update: StoryUpdate) -> SceneIntroductionDto:
-        return SceneIntroductionDto(scene_intro=story_update.new_story_segment,
-                                    game_events=self._map_to_game_events(story_update.engine_events))
-
-    def parse_action_decision(self, decision: ActionDecision) -> bool:
-        if decision.decision == "CONTINUE":
-            return True
-        elif decision.decision == "FINISH":
-            return False
-        else:
-            raise ValueError(f"Unknown decision in LLM Response Parser: {decision}")
-
-    def parse_roll_requirement(self, requirement: RollRequirement) -> DiceRollRequestDto:
-        return DiceRollRequestDto(attempt_desc=requirement.intro,
-                                  requested_stat=self._map_stat_type(requirement.statistic))
-
-    def parse_roll_consequence(self, consequence: RollConsequence) -> str:
-        return consequence.desc
-
-    def parse_final_summary(self, summary: FinalSummary) -> FinalActionOutcomeDto:
-        return FinalActionOutcomeDto(outcome_desc=summary.final_story,
-                                     game_events=self._map_to_game_events(summary.final_events))
-
+    @abstractmethod
+    def parse(self, response_content) -> T:
+        pass
 
     def _map_to_game_events(self, llm_events) -> list[GameEvent]:
         game_events = []
@@ -56,3 +53,42 @@ class ResponseParser:
             return StatType[llm_stat.name]
         except KeyError:
             return None
+        
+class StoryUpdateParser(BaseResponseParser[SceneIntroductionDto]):
+
+    def parse(self, response_content: StoryUpdate) -> SceneIntroductionDto:
+        return SceneIntroductionDto(
+            scene_intro=response_content.new_story_segment, 
+            game_events=self._map_to_game_events(response_content.engine_events)
+        )
+    
+class ActionDecisionParser(BaseResponseParser[bool]):
+
+    def parse(self, response_content: ActionDecision) -> bool:
+        if response_content.decision == "CONTINUE":
+            return True
+        elif response_content.decision == "FINISH":
+            return False
+        else:
+            raise ValueError(f"Unknown decision in LLM Response Parser: {response_content}")
+        
+class RollRequirementParser(BaseResponseParser[DiceRollRequestDto]):
+
+    def parse(self, response_content: RollRequirement) -> DiceRollRequestDto:
+        return DiceRollRequestDto(
+            attempt_desc=response_content.intro,
+            requested_stat=self._map_stat_type(response_content.statistic)
+        )
+    
+class RollConsequenceParser(BaseResponseParser[str]):
+
+    def parse(self, response_content: RollConsequence) -> str:
+        return response_content.desc
+    
+class FinalSummaryParser(BaseResponseParser[FinalActionOutcomeDto]):
+
+    def parse(self, response_content: FinalSummary) -> FinalActionOutcomeDto:
+        return FinalActionOutcomeDto(
+            outcome_desc=response_content.final_story,
+            game_events=self._map_to_game_events(response_content.final_events)
+        )
