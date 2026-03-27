@@ -1,7 +1,7 @@
 import logging
 import pytest
 
-from logic.brain.game_master_brain import GameMasterBrain
+from logic.brain import GameMasterBrain
 from logic.character import Character
 from logic.game.player_action import PlayerAction
 from logic.game.scene import Scene, GameIntroductionSequence

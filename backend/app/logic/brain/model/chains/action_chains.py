@@ -4,7 +4,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from logic.brain.modelmanager.request_structures import ActionDecision, RollRequirement, RollConsequence, FinalSummary
+from logic.brain.model.request_structures import ActionDecision, RollRequirement, RollConsequence, FinalSummary
 
 
 class Node(Enum):

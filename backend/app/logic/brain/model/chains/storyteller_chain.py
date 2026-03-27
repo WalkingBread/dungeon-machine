@@ -2,7 +2,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from logic.brain.modelmanager.request_structures import StoryUpdate
+from logic.brain.model.request_structures import StoryUpdate
 
 
 def build_storyteller_chain(llm: BaseChatModel) -> Runnable:

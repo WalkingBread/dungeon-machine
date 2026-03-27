@@ -2,17 +2,17 @@ import logging
 from enum import Enum
 from typing import Callable
 
-from logic.brain.modelmanager.model_manager import ModelManager
+from logic.brain.model.manager import ModelManager
 from logic.game.game import GameState
 from logic.game.player_action import PlayerAction
 from logic.game.scene import Scene
 from logic.brain.dtos import SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
-from logic.brain.contextparser.context_parser import (
+from logic.brain.context.parser import (
     PlayerActionParser,
     SceneSettingParser,
     RollOutcomeParser
 )
-from logic.brain.responseparser.response_parser import (
+from logic.brain.response.parser import (
     StoryUpdateParser,
     ActionDecisionParser,
     RollRequirementParser,
@@ -103,4 +103,3 @@ officially start the feast. The problem? The tart is gone.
             ResponseParser.FINAL_SUMMARY,
             story, action, game_state
         )
-

@@ -1,8 +1,8 @@
-from logic.brain.modelmanager.chains.storyteller_chain import build_storyteller_chain
+from logic.brain.model.chains.storyteller_chain import build_storyteller_chain
 from genai.models import get_gpt_five_mini, get_gemini
-from logic.brain.modelmanager.request_structures import StoryUpdate, ActionDecision, \
+from logic.brain.model.request_structures import StoryUpdate, ActionDecision, \
     RollRequirement, RollConsequence, FinalSummary
-from logic.brain.modelmanager.chains.action_chains import build_action_chain_registry, Node
+from logic.brain.model.chains.action_chains import build_action_chain_registry, Node
 
 STORYTELLER_MODEL_DICT_NAME = "storyteller_model"
 

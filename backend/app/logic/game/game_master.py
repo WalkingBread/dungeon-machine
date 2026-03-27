@@ -1,7 +1,7 @@
 from typing import Generator
 
 from logic.brain.dtos import SceneIntroductionDto
-from logic.brain.game_master_brain import GameMasterBrain
+from logic.brain import GameMasterBrain
 from logic.game.character import PlayerCharacter
 from logic.game.game import Game
 from logic.game.player_action import PlayerAction

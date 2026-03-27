@@ -1,6 +1,6 @@
 import json
 
-from logic.brain.contextparser.decorators import require_player_context, require_story_context
+from logic.brain.context.decorators import require_player_context, require_story_context
 from logic.character.stat import Statistics
 from logic.game.character import GameCharacter
 from logic.game.game import GameState

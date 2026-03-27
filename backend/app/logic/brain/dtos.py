@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from logic.brain.modelmanager.request_structures import StatisticType
+from logic.brain.model.request_structures import StatisticType
 from logic.game.game_event import GameEvent
 
 # Those are the dtos sent to GameMaster after GMB is called

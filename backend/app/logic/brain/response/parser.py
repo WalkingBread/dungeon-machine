@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from logic.brain.modelmanager.request_structures import (
+from logic.brain.model.request_structures import (
     StoryUpdate, 
     AddCharacter, 
     ChangeHealth,
