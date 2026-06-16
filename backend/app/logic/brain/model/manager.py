@@ -1,5 +1,5 @@
 from logic.brain.model.chains.storyteller_chain import StorytellerChain
-from genai.models import get_gpt_five_mini
+from genai.provider import ModelProvider, Model
 from logic.brain.model.request_structures import (
     StoryUpdate, 
     ActionDecision,
@@ -20,8 +20,10 @@ class ModelManager:
         The configuration of the used models is done via this constructor.
         """
 
-        self.storyteller_chain = StorytellerChain(get_gpt_five_mini())
-        self._action_chain_registry = ActionChainRegistry(get_gpt_five_mini())
+        model_provider = ModelProvider()
+
+        self.storyteller_chain = StorytellerChain(model_provider.get_model(Model.GPT_5_MINI))
+        self._action_chain_registry = ActionChainRegistry(model_provider.get_model(Model.GPT_5_MINI))
 
     def provide_scene_setting(self, model_context: dict) -> StoryUpdate:
         return self.storyteller_chain.invoke(model_context)
