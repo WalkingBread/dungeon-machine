@@ -1,6 +1,5 @@
 from enum import Enum, auto
 
-from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 

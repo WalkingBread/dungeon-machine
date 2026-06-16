@@ -11,5 +11,6 @@ npm run dev
 
 ### To run backend
 ```bash
+cd ./backend
 uv run fastapi dev app/main.py
 ```

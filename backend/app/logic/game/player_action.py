@@ -137,7 +137,7 @@ class PlayerAction:
 
     @require_state(PlayerActionState.REQUIRES_DESCRIPTION)
     @check_action_text(null=False)
-    @require_last_roll_state(DiceRollActionState.FINISHED)
+    #@require_last_roll_state(DiceRollActionState.FINISHED)
     def add_final_description(self, description: str):
         self.result_description = description
         self.state = PlayerActionState.FINISHED
@@ -149,4 +149,4 @@ class DiceRollAction:
     attempt_description: str | None = None
     state: DiceRollActionState = DiceRollActionState.REQUIRES_PLAYER
     dice_result: TestRollOutcome | None = None
-    result_description: str | None = None # what happens after the dice is rolled :)
+    result_description: str | None = None 
