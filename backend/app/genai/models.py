@@ -1,10 +1,8 @@
+import os
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import AzureChatOpenAI
-# from langchain_ollama import ChatOllama
-import os
 from dotenv import load_dotenv
-from pydantic import SecretStr
-from requests.utils import default_headers
 
 QWEN_MODEL = "qwen2.5"
 GPT_FIVE_MODEL = "gpt-5"
@@ -15,13 +13,6 @@ API_VERSION = "2023-05-15"
 API_KEY_HEADER = "X-API-KEY"
 
 load_dotenv(override=True)
-
-# def get_qwen(ctx_window: int) -> ChatOllama:
-#     return ChatOllama(
-#         model=QWEN_MODEL,
-#         num_ctx=ctx_window,
-#         temperature=0
-#     )
 
 def get_gpt_five() -> AzureChatOpenAI:
     api_key = os.getenv(API_KEY_ENV_VAR_NAME)
