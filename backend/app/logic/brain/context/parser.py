@@ -1,67 +1,18 @@
 import json
 
-from logic.brain.contextparser.decorators import require_player_context, require_story_context
+from logic.brain.context.decorators import require_player_context, require_story_context
 from logic.character.stat import Statistics
 from logic.game.character import GameCharacter
 from logic.game.game import GameState
-from logic.game.player_action import PlayerAction, ActionVerificationException
+from logic.game.player_action import PlayerAction
 from logic.game.scene import Scene
+from abc import ABC, abstractmethod
 
+class BaseContextParser(ABC):
 
-class ContextParser:
-
-    @require_story_context
-    def parse_to_scene_setting_context(self, story: list[Scene], game_state: GameState) -> dict:
-        """
-        Helper to extract the most recent scene and common state data for the new scene prompt.
-        """
-        scene_content = story[-1].get_scene_content()
-        serialized_game_state = self._parse_game_state(game_state)
-
-        return {
-            "scene": scene_content,
-            "game_state": serialized_game_state,
-        }
-
-    @require_story_context
-    def parse_to_player_action_context(
-            self,
-            story: list[Scene],
-            player_action: PlayerAction,
-            game_state: GameState
-    ) -> dict:
-        """
-        Orchestrates all parsing logic to create the payload for the
-        LLM action chains (DECIDER, ROLL_SETTER, etc.).
-        """
-        scene_content = story[-1].get_scene_content()
-        serialized_game_state = self._parse_game_state(game_state)
-
-        intent_context = self._parse_player_intent(player_action)
-        action_history_context = self._parse_action_history(player_action)
-
-        return {
-            "scene": scene_content,
-            "game_state": serialized_game_state,
-            "intent": intent_context,
-            "action_history": action_history_context
-        }
-
-    @require_story_context
-    def parse_to_roll_outcome_context(
-            self,
-            story: list[Scene],
-            player_action: PlayerAction,
-            game_state: GameState
-    ) -> dict:
-        """
-        A separate parsing method for getting roll outcome description.
-        It needs additional parameter (result)
-        """
-        action_context = self.parse_to_player_action_context(story, player_action, game_state)
-        action_context["result"] = player_action.last_dice_roll.dice_result.name
-
-        return action_context
+    @abstractmethod
+    def parse(self, **kwargs) -> dict:
+        pass
 
     def _serialize_statistics(self, statistics: Statistics) -> dict:
         if not statistics or not hasattr(statistics, 'stats'):
@@ -111,7 +62,25 @@ class ContextParser:
                 output.append(self._parse_character_to_json(npc).strip())
 
         return "\n".join(output) + "\n"
-
+    
+class SceneSettingParser(BaseContextParser):
+    @require_story_context
+    def parse(self, story: list[Scene], game_state: GameState) -> dict:
+        return {
+            "scene": story[-1].get_scene_content(),
+            "game_state": self._parse_game_state(game_state),
+        }
+    
+class PlayerActionParser(BaseContextParser):
+    @require_story_context
+    def parse(self, story: list[Scene], action: PlayerAction, game_state: GameState) -> dict:
+        return {
+            "scene": story[-1].get_scene_content(),
+            "game_state": self._parse_game_state(game_state),
+            "intent": f"Player {action.player_name} wants to: {action.player_action.strip()}",
+            "action_history": self._parse_action_history(action)
+        }
+    
     @require_player_context
     def _parse_action_history(self, action: PlayerAction) -> str:
         history_lines = []
@@ -136,9 +105,10 @@ class ContextParser:
             history_lines.append(f"FINAL SUMMARY: {action.result_description}")
 
         return "\n".join(history_lines)
-
-    @require_player_context
-    def _parse_player_intent(self, action: PlayerAction) -> str:
-        clean_intent = action.player_action.strip()
-
-        return f"Player {action.player_name.strip()} wants to: {clean_intent}"
+    
+class RollOutcomeParser(PlayerActionParser):
+    @require_story_context
+    def parse(self, story: list[Scene], action: PlayerAction, game_state: GameState):
+        context = super().parse(story, action, game_state)
+        context['result'] = action.last_dice_roll.dice_result.name
+        return context

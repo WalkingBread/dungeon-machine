@@ -2,8 +2,8 @@ import logging
 
 import pytest
 
-from logic.brain.modelmanager.chains.action_chains import Node, build_action_chain_registry
-from logic.brain.modelmanager.request_structures import ActionDecision, RollRequirement, RollConsequence, FinalSummary
+from logic.brain.model.chains.action_chains import Node, build_action_chain_registry
+from logic.brain.model.request_structures import ActionDecision, RollRequirement, RollConsequence, FinalSummary
 from genai.models import get_gpt_five_mini
 
 

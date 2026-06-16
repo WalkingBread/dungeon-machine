@@ -1,11 +1,15 @@
-from logic.brain.modelmanager.chains.storyteller_chain import build_storyteller_chain
-from genai.models import get_gpt_five_mini, get_gemini
-from logic.brain.modelmanager.request_structures import StoryUpdate, ActionDecision, \
-    RollRequirement, RollConsequence, FinalSummary
-from logic.brain.modelmanager.chains.action_chains import build_action_chain_registry, Node
+from logic.brain.model.chains.storyteller_chain import StorytellerChain
+from genai.models import get_gpt_five_mini
+from logic.brain.model.request_structures import (
+    StoryUpdate, 
+    ActionDecision,
+    RollRequirement, 
+    RollConsequence, 
+    FinalSummary
+)
+from logic.brain.model.chains.action_chains import ActionChainRegistry, Node
 
 STORYTELLER_MODEL_DICT_NAME = "storyteller_model"
-
 
 class ModelManager:
     def __init__(self):
@@ -16,8 +20,8 @@ class ModelManager:
         The configuration of the used models is done via this constructor.
         """
 
-        self.storyteller_chain = build_storyteller_chain(get_gpt_five_mini())
-        self._action_chain_registry = build_action_chain_registry(get_gpt_five_mini())
+        self.storyteller_chain = StorytellerChain(get_gpt_five_mini())
+        self._action_chain_registry = ActionChainRegistry(get_gpt_five_mini())
 
     def provide_scene_setting(self, model_context: dict) -> StoryUpdate:
         return self.storyteller_chain.invoke(model_context)
@@ -33,4 +37,3 @@ class ModelManager:
 
     def provide_action_final_summary(self, model_context: dict) -> FinalSummary:
         return self._action_chain_registry[Node.FINALIZER].invoke(model_context)
-        
