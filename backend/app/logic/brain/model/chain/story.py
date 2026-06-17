@@ -2,10 +2,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
 from logic.brain.model.request_structures import StoryUpdate
+from logic.brain.model.chain.base import BaseLangChainWrapper
 
-from logic.brain.model.chains.base import BaseLangChainWrapper
-
-class StorytellerChain(BaseLangChainWrapper):
+class StoryUpdateChain(BaseLangChainWrapper):
     
     def _compile_chain(self) -> Runnable:
         system_message = (

@@ -9,7 +9,13 @@ logger = get_logger()
 class BaseLangChainWrapper(ABC):
     def __init__(self, llm: BaseChatModel):
         self.llm = llm
-        self.chain = self._build_chain()
+        self._chain = None
+
+    @property
+    def chain(self) -> Runnable:
+        if self._chain is None:
+            self._chain = self._build_chain()
+        return self._chain
 
     @abstractmethod
     def _compile_chain(self) -> Runnable:
