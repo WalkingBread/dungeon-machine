@@ -10,7 +10,8 @@ from logic.brain.model.request_structures import (
     ActionDecision, 
     RollRequirement, 
     RollConsequence, 
-    FinalSummary
+    FinalSummary,
+    StoryIntro
 )
 from logic.brain.dtos import (
     SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
@@ -61,6 +62,11 @@ class StoryUpdateParser(BaseResponseParser[SceneIntroductionDto]):
             scene_intro=response_content.new_story_segment, 
             game_events=self._map_to_game_events(response_content.engine_events)
         )
+    
+class StoryIntroParser(BaseResponseParser[str]):
+        
+    def parse(self, response_content: StoryIntro) -> SceneIntroductionDto:
+        return response_content.story_segment
     
 class ActionDecisionParser(BaseResponseParser[bool]):
 

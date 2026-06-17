@@ -71,6 +71,12 @@ class SceneSettingParser(BaseContextParser):
             "game_state": self._parse_game_state(game_state),
         }
     
+class StoryThemeParser(BaseContextParser):
+    def parse(self, story_theme: str) -> dict:
+        return {
+            'story_theme': story_theme
+        }
+    
 class PlayerActionParser(BaseContextParser):
     @require_story_context
     def parse(self, story: list[Scene], action: PlayerAction, game_state: GameState) -> dict:

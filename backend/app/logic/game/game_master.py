@@ -37,7 +37,7 @@ class GameMaster:
             raise Exception("You need to start the game first!")
 
         self._begin_new_scene()
-        intro: str = self._brain.provide_game_introduction(self._game.theme)
+        intro: str = self._brain.provide_game_introduction(self.game.theme)
         self.current_scene.add(GameIntroductionSequence(intro))
         return NarrativeSegment(intro)
 
@@ -109,26 +109,31 @@ class GameMaster:
 
     def _should_action_continue(self) -> bool:
         return self._brain.does_the_action_continue(
-            self._story, self._active_action, self._game.capture_game_state()
+            self._story, 
+            self._active_action, 
+            self._game.capture_game_state()
         )
 
     def _get_required_roll(self):
         return self._brain.provide_required_roll(
-            self._story, self._active_action, self._game.capture_game_state()
+            self._story, 
+            self._active_action, 
+            self._game.capture_game_state()
         )
 
     def _get_roll_outcome(self) -> str:
         return self._brain.provide_roll_outcome_desc(
-            self._story, self._active_action, self._game.capture_game_state()
+            self._story, 
+            self._active_action, 
+            self._game.capture_game_state()
         )
 
     def _get_final_outcome(self):
         return self._brain.provide_final_action_outcome(
-            self._story, self._active_action, self._game.capture_game_state()
+            self._story, 
+            self._active_action, 
+            self._game.capture_game_state()
         )
 
     def _begin_new_scene(self):
-        """
-        helper function for start_next_scene
-        """
         self._story.append(Scene())

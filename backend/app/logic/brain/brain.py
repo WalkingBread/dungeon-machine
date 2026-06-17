@@ -1,4 +1,3 @@
-import logging
 from enum import Enum
 from typing import Callable
 
@@ -10,10 +9,12 @@ from logic.brain.dtos import SceneIntroductionDto, DiceRollRequestDto, FinalActi
 from logic.brain.context.parser import (
     PlayerActionParser,
     SceneSettingParser,
-    RollOutcomeParser
+    RollOutcomeParser,
+    StoryThemeParser
 )
 from logic.brain.response.parser import (
     StoryUpdateParser,
+    StoryIntroParser,
     ActionDecisionParser,
     RollRequirementParser,
     RollConsequenceParser,
@@ -21,11 +22,13 @@ from logic.brain.response.parser import (
 )
 
 class ContextParser(Enum):
+    STORY_THEME = StoryThemeParser()
     SCENE_SETTING = SceneSettingParser()
     PLAYER_ACTION = PlayerActionParser()
     ROLL_OUTCOME = RollOutcomeParser()
 
 class ResponseParser(Enum):
+    STORY_INTRO = StoryIntroParser()
     STORY_UPDATE = StoryUpdateParser()
     ACTION_DECISION = ActionDecisionParser()
     ROLL_REQUIREMENT = RollRequirementParser()
@@ -33,12 +36,12 @@ class ResponseParser(Enum):
     FINAL_SUMMARY = FinalSummaryParser()
 
 
+"""
+GMB is a component responsible for orchestrating context parser, model manager and response parser.
+It receives the objects familiar to GameMaster and handles its parsing into LLM familiar dtos
+for the model manager, it returns its own dtos which usually store strings and sometimes game events.
+"""
 class GameMasterBrain:
-    """
-    GMB is a component responsible for orchestrating context parser, model manager and response parser.
-    It receives the objects familiar to GameMaster and handles its parsing into LLM familiar dtos
-    for the model manager, it returns its own dtos which usually store strings and sometimes game events.
-    """
     def __init__(self):
         self._model_manager = ModelManager()
 
@@ -48,21 +51,13 @@ class GameMasterBrain:
         raw_response = model_call(context)
         return response_parser.value.parse(raw_response)
 
-    def provide_game_introduction(self, theme: str = None) -> str:
-        """
-        Generates the initial world-building parameters based on a theme.
-        Mocking this for now.
-        """
-        return (
-            """The sun is warm on your backs as you walk into the village of Oakhaven. 
-The town square is a mess of colorful ribbons, wooden stalls, and the delicious smell
-of cooling pies. Today is the Annual Blackberry Festival, and everyone is in
-a great mood—except for Old Man Miller.
-
-Miller, the town’s most famous baker, is standing by his empty stall, looking pale. 
-He’s supposed to present the "Crown Tart" to the Mayor in exactly one hour to 
-officially start the feast. The problem? The tart is gone.
-            """)
+    def provide_game_introduction(self, story_theme: str) -> str:
+        return self._dispatch(
+            ContextParser.STORY_THEME,
+            self._model_manager.provide_story_intro,
+            ResponseParser.STORY_INTRO,
+            story_theme
+        )
 
     def provide_scene_intro(self, story: list[Scene], game_state: GameState) -> SceneIntroductionDto:
         return self._dispatch(

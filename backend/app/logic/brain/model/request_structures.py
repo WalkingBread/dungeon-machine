@@ -20,6 +20,8 @@ class StoryUpdate(BaseModel):
     new_story_segment: str = Field(..., description="The next part of the narrative.")
     engine_events: list[SceneSettingEvent] = Field(default_factory=list)
 
+class StoryIntro(BaseModel):
+    story_segment: str = Field(..., description="Introduction to the story.")
 
 class ActionDecision(BaseModel):
     decision: Literal["CONTINUE", "FINISH"] = Field(..., description="Is a roll still needed?")
