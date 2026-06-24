@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from logic.brain.model.request_structures import StatisticType
-from logic.game.game_event import GameEvent
+from logic.game.event import GameEvent
 
 # Those are the dtos sent to GameMaster after GMB is called
 # We also use strings and bools which don't have explicit dtos
@@ -20,4 +20,3 @@ class DiceRollRequestDto:
 class FinalActionOutcomeDto:
     outcome_desc: str
     game_events: list[GameEvent] = field(default_factory=list)
-

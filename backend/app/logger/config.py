@@ -6,7 +6,7 @@ LOG_DIR = 'logs'
 
 MAIN_LOGGER_NAME = 'main'
 
-def get_logger(logger_name: str = MAIN_LOGGER_NAME, level = logging.INFO):
+def get_logger(logger_name: str = MAIN_LOGGER_NAME, level = logging.INFO, stdout=True, to_file=True):
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
 
@@ -14,17 +14,17 @@ def get_logger(logger_name: str = MAIN_LOGGER_NAME, level = logging.INFO):
         os.makedirs(LOG_DIR)
 
     if not logger.handlers:
-        file_handler = logging.FileHandler(os.path.join(LOG_DIR, f'{logger_name}.log'))
-        
         formatter = logging.Formatter(
             '%(asctime)s | %(name)s | %(levelname)s | %(message)s'
         )
-        file_handler.setFormatter(formatter)
+        if to_file:
+            file_handler = logging.FileHandler(os.path.join(LOG_DIR, f'{logger_name}.log'))
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
 
-        stream_handler = logging.StreamHandler(sys.stdout)
-        stream_handler.setFormatter(formatter)
-        
-        logger.addHandler(file_handler)
-        logger.addHandler(stream_handler)
+        if stdout:
+            stream_handler = logging.StreamHandler(sys.stdout)
+            stream_handler.setFormatter(formatter)
+            logger.addHandler(stream_handler)
         
     return logger

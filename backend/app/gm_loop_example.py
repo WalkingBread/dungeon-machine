@@ -29,7 +29,7 @@ def get_dice_roll() -> tuple[int, TestRollOutcome]:
 def game_loop_example():
     gm = GameMaster()
     player = Character.generate_character("Duncan")
-    gm.create_game(theme="Dark Fantasy", players=[player])
+    gm.create_game(theme="Star Wars", players=[player])
 
     intro = gm.get_introduction()
     print(f"[GM] Introduction:\n{intro.text}\n")

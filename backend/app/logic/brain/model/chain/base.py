@@ -4,7 +4,7 @@ from langchain_core.runnables import Runnable, RunnableLambda
 
 from logger.config import get_logger
 
-logger = get_logger()
+logger = get_logger(stdout=False)
 
 class BaseLangChainWrapper(ABC):
     def __init__(self, llm: BaseChatModel):

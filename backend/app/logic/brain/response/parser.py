@@ -17,7 +17,7 @@ from logic.brain.dtos import (
     SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
 )
 from logic.character.stat import StatType
-from logic.game.game_event import (
+from logic.game.event import (
     GameEvent, HealthEvent, AddCharacterEvent, RemoveCharacterEvent
 )
 
