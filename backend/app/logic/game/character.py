@@ -5,10 +5,11 @@ class GameCharacter(Character):
     def __init__(self, name: str, stats: Statistics,
                  inventory_size: int, max_health: int):
         super().__init__(name, stats, inventory_size, max_health)
-        self.dead = False
 
-    def die(self):
-        self.dead = True
+    @property
+    def dead(self):
+        return self.health == 0
+
 
 MAX_HEALTH = 15
 INVENTORY_SIZE = 10

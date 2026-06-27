@@ -13,7 +13,7 @@ from logic.brain.model.request_structures import (
     FinalSummary,
     StoryIntro
 )
-from logic.brain.dtos import (
+from logic.brain.dto.brain import (
     SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
 )
 from logic.character.stat import StatType

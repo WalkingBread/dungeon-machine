@@ -13,18 +13,16 @@ class PlayerInputRequest:
     text: str
 
 @dataclass(frozen=True)
-class PlayerDiceRollRequest:
-    player_name: str
-    statistic: StatType | None
-
-@dataclass(frozen=True)
 class PlayerInputResponse:
     player_name: str
     player_action: str
 
 @dataclass(frozen=True)
+class PlayerDiceRollRequest:
+    player_name: str
+    statistic: StatType | None
+
+@dataclass(frozen=True)
 class PlayerDiceRollResponse:
     player_name: str
-    dice_result: TestRollOutcome
-
-
+    roll_value: int

@@ -20,6 +20,10 @@ class Character:
     @property
     def stats_dict(self) -> dict[str, int]:
         return self.stats.to_dict()
+    
+    def stat_test(self, roll_value: int, stat: StatType):
+        pass_value = self.stats[stat]
+        return TestRollOutcome.get_outcome(roll_value, pass_value, RollType.STAT)
 
     def roll_dice(self, dice: Dice, modifier: int = 0, normalize_outcome: bool = True) -> int:
         roll = dice.roll()

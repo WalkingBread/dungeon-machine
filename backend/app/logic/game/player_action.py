@@ -137,7 +137,6 @@ class PlayerAction:
 
     @require_state(PlayerActionState.REQUIRES_DESCRIPTION)
     @check_action_text(null=False)
-    #@require_last_roll_state(DiceRollActionState.FINISHED)
     def add_final_description(self, description: str):
         self.result_description = description
         self.state = PlayerActionState.FINISHED

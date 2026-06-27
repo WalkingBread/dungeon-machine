@@ -5,7 +5,7 @@ from logic.brain.model.manager import ModelManager
 from logic.game.game import GameState
 from logic.game.player_action import PlayerAction
 from logic.game.scene import Scene
-from logic.brain.dtos import SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
+from logic.brain.dto.brain import SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
 from logic.brain.context.parser import (
     PlayerActionParser,
     SceneSettingParser,
