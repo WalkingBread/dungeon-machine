@@ -6,18 +6,30 @@ from logic.brain.model.chain.base import BaseLangChainWrapper
 
 DECIDER_INSTRUCTION = (
     "Analyze the INTENT and ACTION_HISTORY. "
-    "Return 'FINISH' if the current interaction scenario has reached a natural conclusion, "
-    "is resolved, impossible, or has transitioned into a brand-new phase (such as moving "
-    "locations or entering an encounter tracking state). "
-    "A low-tier mechanical outcome or severe setback should almost always result in 'FINISH' "
-    "because the narrative redirection should fundamentally transition the scene layout."
+    "Determine if the player's action is a basic interaction (like speaking, looking around, or introducing themselves) "
+    "or an active attempt at something risky requiring a skill roll (like lying, sneaking, hacking, or fighting).\n"
+    "Return 'CONTINUE' for casual dialogue or simple actions that do not require a roll.\n"
+    "Only return 'FINISH' if the scene has physically concluded, transitioned to an entirely new location, "
+    "or entered structural combat initiative tracking."
 )
 
-ROLL_SETTER_INSTRUCTION = "Identify the required statistic for the next step and write a narrative 'intro' sentence that builds suspense."
+ROLL_SETTER_INSTRUCTION = (
+    "Identify the single most logical statistic required for this active attempt. "
+    "Do NOT require rolls for simple speech or greeting NPCs. If a roll IS necessary, "
+    "write a narrative 'intro' sentence that builds suspense around the attempt."
+)
 
-ROLL_OUTCOME_INSTRUCTION = "The player rolled a {result}. Describe the immediate physical consequence in one punchy sentence."
+ROLL_OUTCOME_INSTRUCTION = (
+    "The player rolled a {result}. Describe the immediate physical or social consequence in one punchy sentence. "
+    "If the roll was a FAILURE, introduce a narrative complication or an escalating threat (e.g., an NPC draws a weapon) "
+    "instead of instantly breaking the plot or destroying key quest items."
+)
 
-FINALIZER_INSTRUCTION = "Synthesize the intent and all turn history into a cohesive 2-3 sentence final narrative paragraph."
+FINALIZER_INSTRUCTION = (
+    "Synthesize the intent and all turn history into a cohesive 2-3 sentence final narrative paragraph. "
+    "Ensure the paragraph ends with an active conversational prompt, a shift in NPC posture, or a clear environmental "
+    "cue that naturally invites the player's next move."
+)
 
 class ActionChain(BaseLangChainWrapper):
 
@@ -28,9 +40,10 @@ class ActionChain(BaseLangChainWrapper):
 
     def _compile_chain(self) -> Runnable:
         system_message = (
-            "You are a fantasy TTRPG Engine. "
-            "Return the valid result based upon response schema and TASK section"
-            "Maintain a PG-13 adventure tone. Focus on high-stakes drama"
+            "You are a Master TTRPG Engine. Process actions like a flexible Game Master in Dungeons & Dragons. "
+            "Maintain a PG-13 adventure tone focusing on high-stakes space-fantasy drama. "
+            "Never penalize players mechanically for standard, non-hostile roleplay. "
+            "Return the valid JSON result based exactly upon the provided response schema and TASK section."
         )
         
         prompt = ChatPromptTemplate.from_messages([
