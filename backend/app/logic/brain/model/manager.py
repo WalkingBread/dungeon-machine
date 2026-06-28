@@ -1,8 +1,8 @@
 from genai.provider import ModelProvider, Model
 from logic.brain.model.chain.story import StoryUpdateChain, StoryIntroChain
-from logic.brain.model.request_structures import (
+from logic.brain.model.request import (
     StoryUpdate, 
-    ActionDecision,
+    ActionState,
     RollRequirement, 
     RollConsequence, 
     FinalSummary
@@ -44,13 +44,13 @@ class ModelManager:
     def provide_scene_setting(self, model_context: dict) -> StoryUpdate:
         return self._chains[ChainType.STORY_UPDATE].invoke(model_context)
 
-    def provide_action_decision(self, model_context: dict) -> ActionDecision:
+    def provide_action_decision(self, model_context: dict) -> ActionState:
         return self._chains[ChainType.DECIDER].invoke(model_context)
 
     def provide_action_roll(self, model_context: dict) -> RollRequirement:
         return self._chains[ChainType.ROLL_SETTER].invoke(model_context)
 
-    def provide_action_roll_outcome_description(self, model_context: dict) -> RollConsequence:
+    def provide_action_roll_outcome_description(self, model_context: dict) -> ActionState:
         return self._chains[ChainType.ROLL_OUTCOME].invoke(model_context)
 
     def provide_action_final_summary(self, model_context: dict) -> FinalSummary:

@@ -1,28 +1,33 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from logic.brain.model.request_structures import ActionDecision, RollRequirement, RollConsequence, FinalSummary
+from logic.brain.model.request import ActionState, RollRequirement, RollConsequence, FinalSummary
 from logic.brain.model.chain.base import BaseLangChainWrapper
 
 DECIDER_INSTRUCTION = (
-    "Analyze the INTENT and ACTION_HISTORY. "
-    "Determine if the player's action is a basic interaction (like speaking, looking around, or introducing themselves) "
-    "or an active attempt at something risky requiring a skill roll (like lying, sneaking, hacking, or fighting).\n"
-    "Return 'CONTINUE' for casual dialogue or simple actions that do not require a roll.\n"
-    "Only return 'FINISH' if the scene has physically concluded, transitioned to an entirely new location, "
-    "or entered structural combat initiative tracking."
+    "Analyze the player's INTENT and the current ACTION_HISTORY to determine the next immediate engine state.\n"
+    "CRITICAL RULES FOR FIELD POPULATION:\n"
+    "1. 'state': Set to 'INPUT' if the action is a conversational step, dialogue, or safe exploration requiring more player text. "
+    "Set to 'ROLL' if the action involves physical risk, skill usage, or an contested check. "
+    "Set to 'FINISH' if the action is basic, instantly resolved, or if a roll for this intent was already completed in the history.\n"
+    "2. 'narrative': Write a 1-2 sentence response showing how the world or NPCs immediately react to the player's intent.\n"
+    "3. 'engine_events': Include any structural modifications to the environment or characters resulting from this interaction."
+)
+
+ROLL_OUTCOME_INSTRUCTION = (
+    "The player rolled a {result} for their required stat test. Evaluate the consequences.\n"
+    "CRITICAL RULES FOR FIELD POPULATION:\n"
+    "1. 'narrative': Write a single, punchy sentence describing the immediate physical or social layout change caused by this roll result.\n"
+    "2. 'state': Determine the next phase of the transaction: "
+    "Set to 'INPUT' if the roll's result forces a conversational opening (e.g., an NPC demands an immediate answer). "
+    "Set to 'ROLL' if the outcome triggers a cascading physical emergency requiring an immediate follow-up save. "
+    "Set to 'FINISH' if the action path is fully resolved and the turn is complete.\n"
+    "3. 'engine_events': Populate with mechanical changes matching the narrative (e.g., ChangeHealth if they failed a hazard check)."
 )
 
 ROLL_SETTER_INSTRUCTION = (
     "Identify the single most logical statistic required for this active attempt. "
-    "Do NOT require rolls for simple speech or greeting NPCs. If a roll IS necessary, "
-    "write a narrative 'intro' sentence that builds suspense around the attempt."
-)
-
-ROLL_OUTCOME_INSTRUCTION = (
-    "The player rolled a {result}. Describe the immediate physical or social consequence in one punchy sentence. "
-    "If the roll was a FAILURE, introduce a narrative complication or an escalating threat (e.g., an NPC draws a weapon) "
-    "instead of instantly breaking the plot or destroying key quest items."
+    "Write a narrative 'intro' sentence that builds suspense around the attempt."
 )
 
 FINALIZER_INSTRUCTION = (
@@ -59,15 +64,15 @@ class ActionChain(BaseLangChainWrapper):
     
 class DeciderActionChain(ActionChain):
     def __init__(self, llm):
-        super().__init__(llm, DECIDER_INSTRUCTION, ActionDecision)
+        super().__init__(llm, DECIDER_INSTRUCTION, ActionState)
+
+class RollOutcomeActionChain(ActionChain):
+    def __init__(self, llm):
+        super().__init__(llm, ROLL_OUTCOME_INSTRUCTION, ActionState)
 
 class RollSetterActionChain(ActionChain):
     def __init__(self, llm):
         super().__init__(llm, ROLL_SETTER_INSTRUCTION, RollRequirement)
-
-class RollOutcomeActionChain(ActionChain):
-    def __init__(self, llm):
-        super().__init__(llm, ROLL_OUTCOME_INSTRUCTION, RollConsequence)
 
 class FinalizerActionChain(ActionChain):
     def __init__(self, llm):

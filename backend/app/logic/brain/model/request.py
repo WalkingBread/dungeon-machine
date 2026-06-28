@@ -11,20 +11,31 @@ class DeleteCharacter(BaseModel):
     event_type: Literal["delete_character"] = "delete_character"
     character_name: str = Field(..., description="The target character's name.")
 
+class ChangeHealth(BaseModel):
+    event_type: Literal["change_health"] = "change_health"
+    character_name: str = Field(..., description="The target character's name.")
+    health_amount: int = Field(..., description="Change value (negative = damage).")
+
+ActionEvent = Union[
+    ChangeHealth
+]
+
 SceneSettingEvent = Annotated[
     Union[AddCharacter, DeleteCharacter],
     Field(discriminator="event_type")
 ]
 
+class StoryIntroduction(BaseModel):
+    story_segment: str = Field(..., description="Introduction to the story.")
+
 class StoryUpdate(BaseModel):
     new_story_segment: str = Field(..., description="The next part of the narrative.")
     engine_events: list[SceneSettingEvent] = Field(default_factory=list)
 
-class StoryIntro(BaseModel):
-    story_segment: str = Field(..., description="Introduction to the story.")
-
-class ActionDecision(BaseModel):
-    decision: Literal["CONTINUE", "FINISH"] = Field(..., description="Is a roll still needed?")
+class ActionState(BaseModel):
+    narrative: str = Field(..., description='Narrative after player input or dice roll.')
+    engine_events: list[ActionEvent] = Field(default_factory=list, description="A list of events that occur in this segment of action.")
+    state: Literal["INPUT", "ROLL", "FINISH"] = Field(..., description="What should player do next?")
 
 class StatisticType(Enum):
     def _generate_next_value_(name, _start, _count, _last_values):
@@ -47,17 +58,5 @@ class RollRequirement(BaseModel):
 class RollConsequence(BaseModel):
     desc: str = Field(..., description="One-sentence physical result of the dice roll.")
 
-class ChangeHealth(BaseModel):
-    event_type: Literal["change_health"] = "change_health"
-    character_name: str = Field(..., description="The target character's name.")
-    health_amount: int = Field(..., description="Change value (negative = damage).")
-
-FinalEvent = Union[
-    ChangeHealth
-]
-
 class FinalSummary(BaseModel):
-    final_story: str = Field(..., description="The cohesive 2-3 sentence final narrative.")
-    final_events: list[FinalEvent] = Field(default_factory=list, description="A list of optional events for the "
-                                                                             "game engine to execute after "
-                                                                             "player's action.")
+    final_story: str = Field(..., description="The cohesive 2-3 sentence final summary of the player action")

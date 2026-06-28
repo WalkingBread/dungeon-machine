@@ -1,20 +1,20 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from logic.brain.model.request_structures import (
+from logic.brain.model.request import (
     StoryUpdate, 
     AddCharacter, 
     ChangeHealth,
     DeleteCharacter,
     StatisticType, 
-    ActionDecision, 
+    ActionState, 
     RollRequirement, 
     RollConsequence, 
     FinalSummary,
-    StoryIntro
+    StoryIntroduction
 )
 from logic.brain.dto.brain import (
-    SceneIntroductionDto, DiceRollRequestDto, FinalActionOutcomeDto
+    SceneIntroductionDto, DiceRollRequestDto, FinalActionDescDto, ActionStateDto
 )
 from logic.character.stat import StatType
 from logic.game.event import (
@@ -65,18 +65,17 @@ class StoryUpdateParser(BaseResponseParser[SceneIntroductionDto]):
     
 class StoryIntroParser(BaseResponseParser[str]):
         
-    def parse(self, response_content: StoryIntro) -> SceneIntroductionDto:
+    def parse(self, response_content: StoryIntroduction) -> str:
         return response_content.story_segment
     
-class ActionDecisionParser(BaseResponseParser[bool]):
+class ActionStateParser(BaseResponseParser[ActionStateDto]):
 
-    def parse(self, response_content: ActionDecision) -> bool:
-        if response_content.decision == "CONTINUE":
-            return True
-        elif response_content.decision == "FINISH":
-            return False
-        else:
-            raise ValueError(f"Unknown decision in LLM Response Parser: {response_content}")
+    def parse(self, response_content: ActionState) -> ActionStateDto:
+        return ActionStateDto(
+            narrative=response_content.narrative,
+            game_events=self._map_to_game_events(response_content.engine_events),
+            state=response_content.state
+        )
         
 class RollRequirementParser(BaseResponseParser[DiceRollRequestDto]):
 
@@ -91,10 +90,9 @@ class RollConsequenceParser(BaseResponseParser[str]):
     def parse(self, response_content: RollConsequence) -> str:
         return response_content.desc
     
-class FinalSummaryParser(BaseResponseParser[FinalActionOutcomeDto]):
+class FinalSummaryParser(BaseResponseParser[FinalActionDescDto]):
 
-    def parse(self, response_content: FinalSummary) -> FinalActionOutcomeDto:
-        return FinalActionOutcomeDto(
-            outcome_desc=response_content.final_story,
-            game_events=self._map_to_game_events(response_content.final_events)
+    def parse(self, response_content: FinalSummary) -> FinalActionDescDto:
+        return FinalActionDescDto(
+            desc=response_content.final_story,
         )

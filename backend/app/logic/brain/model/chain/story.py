@@ -1,7 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from logic.brain.model.request_structures import StoryUpdate, StoryIntro
+from logic.brain.model.request import StoryUpdate, StoryIntroduction
 from logic.brain.model.chain.base import BaseLangChainWrapper
 
 class StoryIntroChain(BaseLangChainWrapper):
@@ -25,7 +25,7 @@ class StoryIntroChain(BaseLangChainWrapper):
             ("user", "## STORY SETTING:\n{story_theme}")
         ])
 
-        return prompt | self.llm.with_structured_output(StoryIntro)
+        return prompt | self.llm.with_structured_output(StoryIntroduction)
     
 
 class StoryUpdateChain(BaseLangChainWrapper):
