@@ -1,25 +1,27 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from logic.brain.model.request import ActionState, RollRequirement, RollConsequence, FinalSummary
+from logic.brain.model.request import ActionState, RollRequest, FinalSummary
 from logic.brain.model.chain.base import BaseLangChainWrapper
 
 DECIDER_INSTRUCTION = (
-    "Analyze the player's INTENT and the current ACTION_HISTORY to determine the next immediate engine state.\n"
+    "Analyze the current SCENE_CONTEXT and player's CURRENT_ACTION to determine the next immediate engine state.\n"
     "CRITICAL RULES FOR FIELD POPULATION:\n"
-    "1. 'state': Set to 'INPUT' if the action is a conversational step, dialogue, or safe exploration requiring more player text. "
-    "Set to 'ROLL' if the action involves physical risk, skill usage, or an contested check. "
-    "Set to 'FINISH' if the action is basic, instantly resolved, or if a roll for this intent was already completed in the history.\n"
-    "2. 'narrative': Write a 1-2 sentence response showing how the world or NPCs immediately react to the player's intent.\n"
-    "3. 'engine_events': Include any structural modifications to the environment or characters resulting from this interaction."
+    "1. 'state': Set to 'INPUT' if the interaction is an ongoing conversation, dialogue exchange, or safe observation. "
+    "Set to 'ROLL' if the action directly initiates a risky physical or social challenge. "
+    "Set to 'FINISH' if the player's action is minor, fully completed, or directly following a completed dice check.\n"
+    "2. 'narrative': Write a 2-3 sentence response focusing purely on what happens in the physical space. "
+    "If the player asked a question, have the NPC answer it through dialogue or body language. "
+    "CRITICAL: Never list out explicit 'choices' or dictate what actions the player can or should perform next.\n"
+    "3. 'engine_events': Track any baseline mechanical status shifts."
 )
 
 ROLL_OUTCOME_INSTRUCTION = (
-    "The player rolled a {result} for their required stat test. Evaluate the consequences.\n"
+    "The player rolled dice for the test. Evaluate the consequences taking into account the test result in CURRENT_ACTION and SCENE_CONTEXT as a base for further narrative. \n"
     "CRITICAL RULES FOR FIELD POPULATION:\n"
-    "1. 'narrative': Write a single, punchy sentence describing the immediate physical or social layout change caused by this roll result.\n"
-    "2. 'state': Determine the next phase of the transaction: "
-    "Set to 'INPUT' if the roll's result forces a conversational opening (e.g., an NPC demands an immediate answer). "
+    "1. 'narrative': Write a narrative describing the immediate consequences in the story's environment caused by this roll result.\n"
+    "2. 'state': Determine the next phase of player's action: "
+    "Set to 'INPUT' if the roll's result forces player's text input (e.g., an NPC demands an immediate answer). "
     "Set to 'ROLL' if the outcome triggers a cascading physical emergency requiring an immediate follow-up save. "
     "Set to 'FINISH' if the action path is fully resolved and the turn is complete.\n"
     "3. 'engine_events': Populate with mechanical changes matching the narrative (e.g., ChangeHealth if they failed a hazard check)."
@@ -46,7 +48,7 @@ class ActionChain(BaseLangChainWrapper):
     def _compile_chain(self) -> Runnable:
         system_message = (
             "You are a Master TTRPG Engine. Process actions like a flexible Game Master in Dungeons & Dragons. "
-            "Maintain a PG-13 adventure tone focusing on high-stakes space-fantasy drama. "
+            "Maintain a PG-13 adventure tone focusing on high-stakes drama. "
             "Never penalize players mechanically for standard, non-hostile roleplay. "
             "Return the valid JSON result based exactly upon the provided response schema and TASK section."
         )
@@ -55,8 +57,7 @@ class ActionChain(BaseLangChainWrapper):
             {"role": "system", "content": system_message},
             ("user", "## SCENE_CONTEXT:\n{scene}"),
             ("user", "## GAME_STATE:\n{game_state}"),
-            ("user", "## PLAYER_INTENT:\n{intent}"),
-            ("user", "## ACTION_HISTORY:\n{action_history}"),
+            ("user", "## CURRENT_ACTION:\n{current_action}"),
             ("user", f"## TASK:\n{self.instruction}")
         ])
         
@@ -72,7 +73,7 @@ class RollOutcomeActionChain(ActionChain):
 
 class RollSetterActionChain(ActionChain):
     def __init__(self, llm):
-        super().__init__(llm, ROLL_SETTER_INSTRUCTION, RollRequirement)
+        super().__init__(llm, ROLL_SETTER_INSTRUCTION, RollRequest)
 
 class FinalizerActionChain(ActionChain):
     def __init__(self, llm):

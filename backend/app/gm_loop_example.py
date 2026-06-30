@@ -15,45 +15,34 @@ def game_loop_example():
 
     gm = GameMaster()
     player = Character.generate_character("Duncan")
-    gm.create_game(theme="Star Wars", players=[player])
+    gm.create_game(theme="Call of Cthulu", players=[player])
 
     intro = gm.get_introduction()
     print(f"[GM] Introduction:\n{intro.narrative}\n")
 
     while True:
-        scene = gm.start_next_scene()
-        print(f"[GM] Current Scene:\n {scene.narrative}")
+        action_segment = gm.start_next_scene()
+        print(f"[GM] Current Scene:\n {action_segment.narrative}")
 
-        for input_request in scene.input_requests:
-            player_intent = input(f"[GM]: {input_request.player_name} - {input_request.text}\nInput: ")
-            input_response = PlayerInputResponse(
-                player_name=player.name,
-                player_action=player_intent
-            )
+        while gm.expects_action:
+            if isinstance(action_segment.request, DiceRollRequest):
+                print(f"[Roll Required For: {action_segment.request.statistic}]")
+                input(">>> Press [ENTER] to roll...")
+                roll_value = dice_service.roll_dice(DiceType.D100)
+                dice_roll_response = DiceRollResponse(player.name, roll_value)
 
-            action_segment: PlayerActionSegment = gm.handle_player_input(input_response)
+                action_segment = gm.handle_dice_roll(dice_roll_response)
 
+            elif isinstance(action_segment.request, PlayerInputRequest):
+                player_intent = input(f"[GM]: {action_segment.request.player_name} - {action_segment.request.text}\nInput: ")
+                input_response = PlayerInputResponse(
+                    player_name=player.name,
+                    player_action=player_intent
+                )
+
+                action_segment = gm.handle_player_input(input_response)
+            
             print(f"\n[GM]: {action_segment.narrative}")
-
-            while action_segment.request:
-                if isinstance(action_segment.request, DiceRollRequest):
-                    print(f"[Roll Required For: {action_segment.request.statistic}]")
-                    input(">>> Press [ENTER] to roll...")
-                    roll_value = dice_service.roll_dice(DiceType.D100)
-                    dice_roll_response = DiceRollResponse(player.name, roll_value)
-
-                    action_segment = gm.handle_dice_roll(dice_roll_response)
-
-                elif isinstance(action_segment.request, PlayerInputRequest):
-                    player_intent = input(f"[GM]: {input_request.player_name} - {input_request.text}\nInput: ")
-                    input_response = PlayerInputResponse(
-                        player_name=player.name,
-                        player_action=player_intent
-                    )
-
-                    action_segment: PlayerActionSegment = gm.handle_player_input(input_response)
-                
-                print(f"\n[GM]: {action_segment.narrative}")
 
 if __name__ == "__main__":
     game_loop_example()

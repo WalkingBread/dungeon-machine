@@ -8,8 +8,7 @@ from logic.brain.model.request import (
     DeleteCharacter,
     StatisticType, 
     ActionState, 
-    RollRequirement, 
-    RollConsequence, 
+    RollRequest, 
     FinalSummary,
     StoryIntroduction
 )
@@ -79,17 +78,11 @@ class ActionStateParser(BaseResponseParser[ActionStateDto]):
         
 class RollRequirementParser(BaseResponseParser[DiceRollRequestDto]):
 
-    def parse(self, response_content: RollRequirement) -> DiceRollRequestDto:
+    def parse(self, response_content: RollRequest) -> DiceRollRequestDto:
         return DiceRollRequestDto(
-            attempt_desc=response_content.intro,
             requested_stat=self._map_stat_type(response_content.statistic)
         )
-    
-class RollConsequenceParser(BaseResponseParser[str]):
 
-    def parse(self, response_content: RollConsequence) -> str:
-        return response_content.desc
-    
 class FinalSummaryParser(BaseResponseParser[FinalActionDescDto]):
 
     def parse(self, response_content: FinalSummary) -> FinalActionDescDto:

@@ -16,7 +16,6 @@ class ActionStateDto:
 
 @dataclass(frozen=True)
 class DiceRollRequestDto:
-    attempt_desc: str
     requested_stat: StatisticType | None = None
 
 @dataclass(frozen=True)

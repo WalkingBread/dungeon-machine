@@ -21,18 +21,30 @@ class GameIntroductionSequence(SceneSequence):
     pass
 
 @dataclass
-class PlayerActionSequence(SceneSequence):
+class PlayerSequence(SceneSequence):
     player_name:str
 
     def format_sequence(self) -> str:
         return f"{self.sequence_type} - {self.player_name}: {self.content}"
 
 @dataclass
-class SceneDescriptionSequence(SceneSequence):
+class PlayerActionSequence(PlayerSequence):
+    pass
+    
+@dataclass
+class PlayerActionConsequenceSequence(PlayerSequence):
     pass
 
 @dataclass
-class ActionDescriptionSequence(SceneSequence):
+class DiceRollSequence(PlayerSequence):
+    pass
+
+@dataclass
+class DiceRollConsequenceSequence(PlayerSequence):
+    pass
+
+@dataclass
+class SceneDescriptionSequence(SceneSequence):
     pass
 
 @dataclass
@@ -42,6 +54,10 @@ class EngineEventSequence(SceneSequence):
 @dataclass
 class Scene:
     scene_sequences: list[SceneSequence] = field(default_factory=list)
+
+    @property
+    def last_sequence(self):
+        return self.scene_sequences[-1] if self.scene_sequences else None
 
     def add(self, sequence: SceneSequence):
         self.scene_sequences.append(sequence)

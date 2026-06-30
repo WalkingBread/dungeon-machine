@@ -43,7 +43,6 @@ class StoryUpdateChain(BaseLangChainWrapper):
             "4. ENGINE LOGIC: Translate actions into events (AddCharacter, DeleteCharacter).\n"
             "5. NO QUESTIONS: Do not ask the player what they do; the engine handles that.\n"
             "6. EVENT TYPES: Include the 'event_type' literal in every event object.\n"
-            "7. LANGUAGE: Use simple english to describe the scenes don't add too much old vocabulary.\n"
             "TONE: Gritty, high-stakes."
         )
 

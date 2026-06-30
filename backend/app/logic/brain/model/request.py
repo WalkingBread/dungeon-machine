@@ -47,16 +47,12 @@ class StatisticType(Enum):
     LUCK = auto()
     CHARISMA = auto()
 
-class RollRequirement(BaseModel):
+class RollRequest(BaseModel):
     statistic: StatisticType = Field(
         ...,
         description="The stat to use. Use NO_STATISTIC for flat rolls."
     )
-    intro: str = Field(..., description="Suspenseful intro sentence before the roll.")
 
-
-class RollConsequence(BaseModel):
-    desc: str = Field(..., description="One-sentence physical result of the dice roll.")
 
 class FinalSummary(BaseModel):
     final_story: str = Field(..., description="The cohesive 2-3 sentence final summary of the player action")

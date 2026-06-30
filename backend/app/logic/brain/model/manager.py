@@ -3,8 +3,7 @@ from logic.brain.model.chain.story import StoryUpdateChain, StoryIntroChain
 from logic.brain.model.request import (
     StoryUpdate, 
     ActionState,
-    RollRequirement, 
-    RollConsequence, 
+    RollRequest, 
     FinalSummary
 )
 from logic.brain.model.chain.action import (
@@ -47,7 +46,7 @@ class ModelManager:
     def provide_action_decision(self, model_context: dict) -> ActionState:
         return self._chains[ChainType.DECIDER].invoke(model_context)
 
-    def provide_action_roll(self, model_context: dict) -> RollRequirement:
+    def provide_action_roll(self, model_context: dict) -> RollRequest:
         return self._chains[ChainType.ROLL_SETTER].invoke(model_context)
 
     def provide_action_roll_outcome_description(self, model_context: dict) -> ActionState:

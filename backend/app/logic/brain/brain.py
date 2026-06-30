@@ -3,13 +3,11 @@ from typing import Callable
 
 from logic.brain.model.manager import ModelManager
 from logic.game.game import GameState
-from logic.game.player_action import PlayerAction
 from logic.game.scene import Scene
 from logic.brain.dto.brain import SceneIntroductionDto, DiceRollRequestDto, FinalActionDescDto, ActionStateDto
 from logic.brain.context.parser import (
     PlayerActionParser,
     SceneSettingParser,
-    RollOutcomeParser,
     StoryThemeParser
 )
 from logic.brain.response.parser import (
@@ -17,7 +15,6 @@ from logic.brain.response.parser import (
     StoryIntroParser,
     ActionStateParser,
     RollRequirementParser,
-    RollConsequenceParser,
     FinalSummaryParser
 )
 
@@ -25,14 +22,12 @@ class ContextParser(Enum):
     STORY_THEME = StoryThemeParser()
     SCENE_SETTING = SceneSettingParser()
     PLAYER_ACTION = PlayerActionParser()
-    ROLL_OUTCOME = RollOutcomeParser()
 
 class ResponseParser(Enum):
     STORY_INTRO = StoryIntroParser()
     STORY_UPDATE = StoryUpdateParser()
     ACTION_STATE = ActionStateParser()
     ROLL_REQUIREMENT = RollRequirementParser()
-    ROLL_CONSEQUENCE  = RollConsequenceParser()
     FINAL_SUMMARY = FinalSummaryParser()
 
 
@@ -67,34 +62,34 @@ class GameMasterBrain:
             story, game_state
         )
 
-    def provide_action_state(self, story: list[Scene], action: PlayerAction, game_state: GameState) -> ActionStateDto:
+    def provide_action_state(self, story: list[Scene], game_state: GameState) -> ActionStateDto:
         return self._dispatch(
             ContextParser.PLAYER_ACTION,
             self._model_manager.provide_action_decision,
             ResponseParser.ACTION_STATE,
-            story, action, game_state
+            story, game_state
         )
 
-    def provide_required_roll(self, story: list[Scene], action: PlayerAction, game_state: GameState) -> DiceRollRequestDto:
+    def provide_required_roll(self, story: list[Scene], game_state: GameState) -> DiceRollRequestDto:
         return self._dispatch(
             ContextParser.PLAYER_ACTION,
             self._model_manager.provide_action_roll,
             ResponseParser.ROLL_REQUIREMENT,
-            story, action, game_state
+            story, game_state
         )
 
-    def provide_roll_outcome_desc(self, story: list[Scene], action: PlayerAction, game_state: GameState) -> ActionStateDto:
+    def provide_roll_outcome_desc(self, story: list[Scene], game_state: GameState) -> ActionStateDto:
         return self._dispatch(
-            ContextParser.ROLL_OUTCOME,
+            ContextParser.PLAYER_ACTION,
             self._model_manager.provide_action_roll_outcome_description,
             ResponseParser.ACTION_STATE,
-            story, action, game_state
+            story, game_state
         )
 
-    def provide_final_action_outcome(self, story: list[Scene], action: PlayerAction, game_state: GameState) -> FinalActionDescDto:
+    def provide_final_action_outcome(self, story: list[Scene], game_state: GameState) -> FinalActionDescDto:
         return self._dispatch(
             ContextParser.PLAYER_ACTION,
             self._model_manager.provide_action_final_summary,
             ResponseParser.FINAL_SUMMARY,
-            story, action, game_state
+            story, game_state
         )

@@ -17,6 +17,9 @@ def get_dice_for(roll_type: RollType):
     return ROLL_TYPE_DICE_CONFIG[roll_type]
 
 class TestRollOutcome(Enum):
+    def _generate_next_value_(name, _start, _count, _last_values):
+        return name.upper()
+
     EXTREME_SUCCESS = auto()
     SUCCESS = auto()
     FAILURE = auto()
@@ -41,6 +44,10 @@ class TestRollOutcome(Enum):
             if extreme_roll_conf.is_extreme_failure(roll_value, dice.sides):
                 return TestRollOutcome.EXTREME_FAILURE
             return TestRollOutcome.FAILURE
+        
+    def __str__(self):
+        return self.value
+        
         
 @dataclass
 class ExtremeRollConfig:
