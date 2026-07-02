@@ -9,6 +9,11 @@ class SceneIntroductionDto:
     game_events: list[GameEvent] = field(default_factory=list)
 
 @dataclass(frozen=True)
+class SceneDescriptionDto:
+    description: str
+    game_events: list[GameEvent] = field(default_factory=list)
+
+@dataclass(frozen=True)
 class ActionStateDto:
     narrative: str
     state: str

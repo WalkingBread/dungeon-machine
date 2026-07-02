@@ -1,4 +1,4 @@
-from logic.brain.dto.brain import SceneIntroductionDto, ActionStateDto
+from logic.brain.dto.brain import SceneIntroductionDto, ActionStateDto, SceneDescriptionDto
 from logic.brain import GameMasterBrain
 from logic.game.character import PlayerCharacter
 from logic.game.game import Game
@@ -10,7 +10,8 @@ from logic.game.model.gamemaster import (
     PlayerInputRequest,
     GameIntroduction,
     SceneIntroduction,
-    PlayerActionSegment
+    PlayerActionSegment,
+    GameMasterRequest,
 )
 from logic.game.scene import (
     Scene, 
@@ -21,6 +22,7 @@ from logic.game.scene import (
     GameIntroductionSequence, 
     SceneDescriptionSequence
 )
+from logic.game.turn import TurnManager
 
 from functools import wraps
 
@@ -73,13 +75,13 @@ def expected_action(expected_type):
         return wrapper
     return decorator
 
-
 class GameMaster:
     def __init__(self):
         self._game: Game | None = None
         self._story: list[Scene] = []
         self._brain = GameMasterBrain()
-        self._expected_player_action = None
+        self._expected_player_action: GameMasterRequest | None = None
+        self._turn_manager: TurnManager | None = None
 
     @property
     def game(self):
@@ -94,16 +96,20 @@ class GameMaster:
         return self._story[-1] if self._story else None
     
     @property
+    def current_player(self):
+        return self._turn_manager.current_player
+    
+    @property
+    def round_finished(self):
+        return self._turn_manager.round_finished
+    
+    @property
     def expects_action(self) -> bool:
         return self._expected_player_action is not None
 
     def create_game(self, theme: str, players: list[PlayerCharacter]):
         self._game = Game(theme, players)
-
-    @in_game
-    @expect_action
-    def next_player_turn(self) -> PlayerActionSegment:
-        return PlayerActionSegment()
+        self._turn_manager = TurnManager(players)
 
     @in_game
     def get_introduction(self) -> GameIntroduction:
@@ -117,18 +123,30 @@ class GameMaster:
     @in_game
     @expect_action
     def start_next_scene(self) -> PlayerActionSegment:
-        state = self._game.capture_game_state()
-        scene_introduction: SceneIntroductionDto = self._brain.provide_scene_intro(self._story, state)
+        player = self._turn_manager.start_new_round()
+
+        scene_introduction = self._get_scene_introduction()
 
         self._begin_new_scene(scene_introduction)
 
-        player_char = self._game.player_characters[0]
-
         return PlayerActionSegment(
             narrative=scene_introduction.scene_intro,
-            request=PlayerInputRequest(player_char.name, "What do you do?")
+            request=PlayerInputRequest(player.name, "What do you do?")
         )
     
+    @in_game
+    @expect_action
+    def next_player_turn(self) -> PlayerActionSegment:
+        player = self._turn_manager.next_player_turn()
+
+        scene_update = self._get_next_player_scene_update()
+        self._execute_events(scene_update.game_events)
+
+        return PlayerActionSegment(
+            scene_update.description,
+            request=PlayerInputRequest(player.name, "What do you do?")
+        )
+
     @in_game
     @expected_action(PlayerInputRequest)
     def handle_player_input(self, player_input: PlayerInputResponse) -> PlayerActionSegment:
@@ -139,7 +157,7 @@ class GameMaster:
             player_name
         ))
 
-        action_state = self._get_action_state()
+        action_state = self._get_player_input_outcome()
 
         self.current_scene.add(PlayerActionConsequenceSequence(
             action_state.narrative,
@@ -191,28 +209,46 @@ class GameMaster:
         event_sequences = self._game.execute_events(game_events)
         self.current_scene.extend(event_sequences)
 
-    def _get_action_state(self) -> ActionStateDto:
-        return self._brain.provide_action_state(
+    def _get_scene_introduction(self) -> SceneIntroductionDto:
+        return self._brain.provide_scene_intro(
             self._story, 
-            self._game.capture_game_state()
+            self._game.capture_game_state(),
+            self._turn_manager.current_player.name
+        )
+
+    def _get_next_player_scene_update(self) -> SceneDescriptionDto:
+        return self._brain.provide_next_player_scene_update(
+            self._story,
+            self._game.capture_game_state(),
+            self._turn_manager.current_player.name
+        )
+
+    def _get_player_input_outcome(self) -> ActionStateDto:
+        return self._brain.provide_player_input_outcome(
+            self._story, 
+            self._game.capture_game_state(),
+            self._turn_manager.current_player.name
         )
 
     def _get_required_roll(self):
         return self._brain.provide_required_roll(
             self._story, 
-            self._game.capture_game_state()
+            self._game.capture_game_state(),
+            self._turn_manager.current_player.name
         )
 
     def _get_roll_outcome(self) -> ActionStateDto:
         return self._brain.provide_roll_outcome_desc(
             self._story, 
-            self._game.capture_game_state()
+            self._game.capture_game_state(),
+            self._turn_manager.current_player.name
         )
 
     def _get_final_outcome(self):
         return self._brain.provide_final_action_outcome(
             self._story, 
-            self._game.capture_game_state()
+            self._game.capture_game_state(),
+            self._turn_manager.current_player.name
         )
     
     def _init_scene(self):

@@ -64,20 +64,31 @@ class BaseContextParser(ABC):
     
 class SceneSettingParser(BaseContextParser):
     @require_story_context
-    def parse(self, story: list[Scene], game_state: GameState) -> dict:
+    def parse(self, story: list[Scene], game_state: GameState, current_player: str) -> dict:
         return {
             "scene": story[-1].get_scene_content(),
             "game_state": self._parse_game_state(game_state),
+            "player": current_player
+        }
+
+class SceneUpdateParser(BaseContextParser):
+    @require_story_context
+    def parse(self, story: list[Scene], game_state: GameState, current_player: str) -> dict:
+        return {
+            "scene": story[-1].get_scene_content(),
+            "game_state": self._parse_game_state(game_state),
+            "player": current_player
         }
     
 class PlayerActionParser(BaseContextParser):
     @require_story_context
-    def parse(self, story: list[Scene], game_state: GameState) -> dict:
+    def parse(self, story: list[Scene], game_state: GameState, current_player: str) -> dict:
         scene = story[-1]
 
         return {
             "scene": scene.get_scene_content(),
             "game_state": self._parse_game_state(game_state),
+            "player": current_player,
             "current_action": scene.last_sequence.format_sequence()
         }
     

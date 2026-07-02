@@ -10,10 +10,15 @@ from logic.brain.model.request import (
     ActionState, 
     RollRequest, 
     FinalSummary,
-    StoryIntroduction
+    StoryIntroduction,
+    SceneUpdate
 )
 from logic.brain.dto.brain import (
-    SceneIntroductionDto, DiceRollRequestDto, FinalActionDescDto, ActionStateDto
+    SceneIntroductionDto, 
+    DiceRollRequestDto, 
+    FinalActionDescDto, 
+    ActionStateDto,
+    SceneDescriptionDto
 )
 from logic.character.stat import StatType
 from logic.game.event import (
@@ -74,6 +79,14 @@ class ActionStateParser(BaseResponseParser[ActionStateDto]):
             narrative=response_content.narrative,
             game_events=self._map_to_game_events(response_content.engine_events),
             state=response_content.state
+        )
+    
+class SceneUpdateParser(BaseResponseParser[SceneUpdate]):
+
+    def parse(self, response_content: SceneUpdate) -> SceneDescriptionDto:
+        return ActionStateDto(
+            narrative=response_content.narrative,
+            game_events=self._map_to_game_events(response_content.engine_events),
         )
         
 class RollRequirementParser(BaseResponseParser[DiceRollRequestDto]):

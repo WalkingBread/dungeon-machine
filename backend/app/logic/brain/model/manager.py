@@ -1,10 +1,11 @@
 from genai.provider import ModelProvider, Model
-from logic.brain.model.chain.story import StoryUpdateChain, StoryIntroChain
+from logic.brain.model.chain.story import StoryUpdateChain, StoryIntroChain, SceneUpdateChain
 from logic.brain.model.request import (
     StoryUpdate, 
     ActionState,
     RollRequest, 
-    FinalSummary
+    FinalSummary,
+    SceneUpdate
 )
 from logic.brain.model.chain.action import (
     DeciderActionChain,
@@ -33,7 +34,9 @@ class ModelManager:
             ChainType.ROLL_SETTER: RollSetterActionChain(action_model),
             ChainType.ROLL_OUTCOME: RollOutcomeActionChain(action_model),
             ChainType.FINALIZER: FinalizerActionChain(action_model),
+            
             ChainType.STORY_UPDATE: StoryUpdateChain(storyteller_model),
+            ChainType.NEXT_PLAYER: SceneUpdateChain(storyteller_model),
             ChainType.STORY_INTRO: StoryIntroChain(storyteller_model)
         }
 
@@ -43,13 +46,16 @@ class ModelManager:
     def provide_scene_setting(self, model_context: dict) -> StoryUpdate:
         return self._chains[ChainType.STORY_UPDATE].invoke(model_context)
 
-    def provide_action_decision(self, model_context: dict) -> ActionState:
+    def provide_player_input_outcome(self, model_context: dict) -> ActionState:
         return self._chains[ChainType.DECIDER].invoke(model_context)
+    
+    def provide_next_player_scene_update(self, model_context: dict) -> SceneUpdate:
+        return self._chains[ChainType.NEXT_PLAYER].invoke(model_context)
 
     def provide_action_roll(self, model_context: dict) -> RollRequest:
         return self._chains[ChainType.ROLL_SETTER].invoke(model_context)
 
-    def provide_action_roll_outcome_description(self, model_context: dict) -> ActionState:
+    def provide_action_roll_outcome(self, model_context: dict) -> ActionState:
         return self._chains[ChainType.ROLL_OUTCOME].invoke(model_context)
 
     def provide_action_final_summary(self, model_context: dict) -> FinalSummary:

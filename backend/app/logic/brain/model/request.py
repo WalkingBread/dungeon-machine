@@ -32,6 +32,10 @@ class StoryUpdate(BaseModel):
     new_story_segment: str = Field(..., description="The next part of the narrative.")
     engine_events: list[SceneSettingEvent] = Field(default_factory=list)
 
+class SceneUpdate(BaseModel):
+    narrative: str = Field(..., description='Narrative for the next player to begin his turn.')
+    engine_events: list[ActionEvent] = Field(default_factory=list, description="A list of events that occur in this segment of action.")
+
 class ActionState(BaseModel):
     narrative: str = Field(..., description='Narrative after player input or dice roll.')
     engine_events: list[ActionEvent] = Field(default_factory=list, description="A list of events that occur in this segment of action.")
@@ -48,10 +52,7 @@ class StatisticType(Enum):
     CHARISMA = auto()
 
 class RollRequest(BaseModel):
-    statistic: StatisticType = Field(
-        ...,
-        description="The stat to use. Use NO_STATISTIC for flat rolls."
-    )
+    statistic: StatisticType = Field(..., description="The stat to use. Use NO_STATISTIC for flat rolls.")
 
 
 class FinalSummary(BaseModel):

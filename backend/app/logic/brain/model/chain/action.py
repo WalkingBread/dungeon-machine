@@ -1,7 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from logic.brain.model.request import ActionState, RollRequest, FinalSummary
+from logic.brain.model.request import ActionState, RollRequest, FinalSummary, SceneUpdate
 from logic.brain.model.chain.base import BaseLangChainWrapper
 
 DECIDER_INSTRUCTION = (
@@ -28,8 +28,7 @@ ROLL_OUTCOME_INSTRUCTION = (
 )
 
 ROLL_SETTER_INSTRUCTION = (
-    "Identify the single most logical statistic required for this active attempt. "
-    "Write a narrative 'intro' sentence that builds suspense around the attempt."
+    "Identify the single most logical statistic required for this active attempt."
 )
 
 FINALIZER_INSTRUCTION = (
@@ -57,6 +56,7 @@ class ActionChain(BaseLangChainWrapper):
             {"role": "system", "content": system_message},
             ("user", "## SCENE_CONTEXT:\n{scene}"),
             ("user", "## GAME_STATE:\n{game_state}"),
+            ("user", "## CURRENT_PLAYER:\n{player}"),
             ("user", "## CURRENT_ACTION:\n{current_action}"),
             ("user", f"## TASK:\n{self.instruction}")
         ])

@@ -4,23 +4,32 @@ from typing import Callable
 from logic.brain.model.manager import ModelManager
 from logic.game.game import GameState
 from logic.game.scene import Scene
-from logic.brain.dto.brain import SceneIntroductionDto, DiceRollRequestDto, FinalActionDescDto, ActionStateDto
+from logic.brain.dto.brain import (
+    SceneIntroductionDto, 
+    SceneDescriptionDto,
+    DiceRollRequestDto, 
+    FinalActionDescDto, 
+    ActionStateDto
+)
 from logic.brain.context.parser import (
     PlayerActionParser,
     SceneSettingParser,
-    StoryThemeParser
+    StoryThemeParser,
+    SceneUpdateParser
 )
 from logic.brain.response.parser import (
     StoryUpdateParser,
     StoryIntroParser,
     ActionStateParser,
     RollRequirementParser,
-    FinalSummaryParser
+    FinalSummaryParser,
+    SceneUpdateParser
 )
 
 class ContextParser(Enum):
     STORY_THEME = StoryThemeParser()
     SCENE_SETTING = SceneSettingParser()
+    SCENE_UPDATE = SceneUpdateParser()
     PLAYER_ACTION = PlayerActionParser()
 
 class ResponseParser(Enum):
@@ -29,6 +38,7 @@ class ResponseParser(Enum):
     ACTION_STATE = ActionStateParser()
     ROLL_REQUIREMENT = RollRequirementParser()
     FINAL_SUMMARY = FinalSummaryParser()
+    SCENE_UPDATE = SceneUpdateParser()
 
 
 """
@@ -54,42 +64,50 @@ class GameMasterBrain:
             story_theme
         )
 
-    def provide_scene_intro(self, story: list[Scene], game_state: GameState) -> SceneIntroductionDto:
+    def provide_scene_intro(self, story: list[Scene], game_state: GameState, player_name) -> SceneIntroductionDto:
         return self._dispatch(
             ContextParser.SCENE_SETTING,
             self._model_manager.provide_scene_setting,
             ResponseParser.STORY_UPDATE,
-            story, game_state
+            story, game_state, player_name
+        )
+    
+    def provide_next_player_scene_update(self, story: list[Scene], game_state: GameState, player_name: str) -> SceneDescriptionDto:
+        return self._dispatch(
+            ContextParser.SCENE_SETTING,
+            self._model_manager.provide_next_player_scene_update,
+            ResponseParser.SCENE_UPDATE,
+            story, game_state, player_name
         )
 
-    def provide_action_state(self, story: list[Scene], game_state: GameState) -> ActionStateDto:
+    def provide_player_input_outcome(self, story: list[Scene], game_state: GameState, player_name: str) -> SceneDescriptionDto:
         return self._dispatch(
             ContextParser.PLAYER_ACTION,
-            self._model_manager.provide_action_decision,
+            self._model_manager.provide_player_input_outcome,
             ResponseParser.ACTION_STATE,
-            story, game_state
+            story, game_state, player_name
         )
 
-    def provide_required_roll(self, story: list[Scene], game_state: GameState) -> DiceRollRequestDto:
+    def provide_required_roll(self, story: list[Scene], game_state: GameState, player_name: str) -> DiceRollRequestDto:
         return self._dispatch(
             ContextParser.PLAYER_ACTION,
             self._model_manager.provide_action_roll,
             ResponseParser.ROLL_REQUIREMENT,
-            story, game_state
+            story, game_state, player_name
         )
 
-    def provide_roll_outcome_desc(self, story: list[Scene], game_state: GameState) -> ActionStateDto:
+    def provide_roll_outcome_desc(self, story: list[Scene], game_state: GameState, player_name: str) -> ActionStateDto:
         return self._dispatch(
             ContextParser.PLAYER_ACTION,
-            self._model_manager.provide_action_roll_outcome_description,
+            self._model_manager.provide_action_roll_outcome,
             ResponseParser.ACTION_STATE,
-            story, game_state
+            story, game_state, player_name
         )
 
-    def provide_final_action_outcome(self, story: list[Scene], game_state: GameState) -> FinalActionDescDto:
+    def provide_final_action_outcome(self, story: list[Scene], game_state: GameState, player_name: str) -> FinalActionDescDto:
         return self._dispatch(
             ContextParser.PLAYER_ACTION,
             self._model_manager.provide_action_final_summary,
             ResponseParser.FINAL_SUMMARY,
-            story, game_state
+            story, game_state, player_name
         )
